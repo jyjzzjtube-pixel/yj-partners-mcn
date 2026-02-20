@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YJ Partners MCN & F&B Hub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1117;--card:#1a1d29;--card2:#222639;--border:#2d3148;--primary:#6366f1;--primary-light:#818cf8;--accent:#f59e0b;--green:#22c55e;--red:#ef4444;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b}
+body{font-family:'Pretendard Variable','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--primary-light);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Header */
+.header{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e1b4b 100%);border-bottom:1px solid var(--border);padding:20px 0}
+.header-inner{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:48px;height:48px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#fff;letter-spacing:-1px}
+.logo h1{font-size:22px;font-weight:800;color:#fff}
+.logo p{font-size:12px;color:var(--primary-light);margin-top:2px}
+.header-badge{background:var(--green);color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.5px}
+
+/* Main */
+.main{max-width:1400px;margin:0 auto;padding:24px}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric.m1::before{background:var(--primary)}
+.metric.m2::before{background:var(--accent)}
+.metric.m3::before{background:var(--green)}
+.metric.m4::before{background:var(--red)}
+.metric-label{font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.metric-value{font-size:28px;font-weight:800;color:#fff}
+.metric-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Section */
+.section{margin-bottom:28px}
+.section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title span{font-size:18px}
+
+/* Grid 2-col */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* Brand Cards */
+.brand-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:border-color .2s}
+.brand-card:hover{border-color:var(--primary)}
+.brand-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.brand-emoji{font-size:36px}
+.brand-name{font-size:18px;font-weight:700}
+.brand-type{font-size:12px;color:var(--text3)}
+.brand-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.brand-stat{text-align:center;background:var(--card2);border-radius:8px;padding:10px}
+.brand-stat-val{font-size:18px;font-weight:700;color:var(--primary-light)}
+.brand-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.brand-platforms{display:flex;gap:6px;flex-wrap:wrap}
+.platform-tag{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2)}
+
+/* Feature Grid */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.feature-icon{font-size:28px;margin-bottom:10px}
+.feature-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.feature-desc{font-size:13px;color:var(--text2);line-height:1.5}
+
+/* Workflow */
+.workflow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0}
+.wf-step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;min-width:160px;text-align:center;flex-shrink:0}
+.wf-step-num{font-size:11px;color:var(--primary-light);font-weight:700;margin-bottom:4px}
+.wf-step-icon{font-size:24px;margin-bottom:6px}
+.wf-step-text{font-size:13px;font-weight:600}
+.wf-arrow{font-size:20px;color:var(--text3);padding:0 4px;flex-shrink:0}
+
+/* Status */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.status-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-dot.on{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.4)}
+.status-dot.off{background:var(--text3)}
+.status-name{font-size:13px;font-weight:600}
+.status-detail{font-size:11px;color:var(--text3)}
+
+/* Sites table */
+.sites-table{width:100%;border-collapse:collapse}
+.sites-table th{text-align:left;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--border)}
+.sites-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.sites-table tr:hover{background:var(--card2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-up{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-gh{background:rgba(99,102,241,.15);color:var(--primary-light)}
+.badge-ext{background:rgba(245,158,11,.15);color:var(--accent)}
+
+/* Footer */
+.footer{text-align:center;padding:32px;color:var(--text3);font-size:12px;border-top:1px solid var(--border);margin-top:40px}
+
+/* CTA */
+.cta-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.cta{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .2s}
+.cta:hover{opacity:.85;text-decoration:none}
+.cta-primary{background:var(--primary);color:#fff}
+.cta-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">YJ</div>
+      <div>
+        <h1>YJ Partners MCN & F&B</h1>
+        <p>Multi-Channel Network Automation Hub</p>
+      </div>
+    </div>
+    <div class="header-badge">SYSTEM ONLINE</div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric m1">
+      <div class="metric-label">Managed Brands</div>
+      <div class="metric-value">3</div>
+      <div class="metric-sub">F&B 2 + Consulting 1</div>
+    </div>
+    <div class="metric m2">
+      <div class="metric-label">Active Platforms</div>
+      <div class="metric-value">5</div>
+      <div class="metric-sub">YouTube, Naver, Instagram, Coupang, TikTok</div>
+    </div>
+    <div class="metric m3">
+      <div class="metric-label">AI Engines</div>
+      <div class="metric-value">2</div>
+      <div class="metric-sub">Gemini 2.5 Flash + Claude Haiku</div>
+    </div>
+    <div class="metric m4">
+      <div class="metric-label">Automation Tools</div>
+      <div class="metric-value">14</div>
+      <div class="metric-sub">Web Apps + Bots + Desktop</div>
+    </div>
+  </div>
+
+  <!-- Brands -->
+  <div class="section">
+    <div class="section-title"><span>&#x1F3E2;</span> Managed Brands</div>
+    <div class="grid-2" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="brand-card">
+        <div class="brand-header">
+          <div class="brand-emoji">&#x1F371;</div>
+          <div><div class="brand-name">오레노카츠</div><div class="brand-type">Japanese Tonkatsu Franchise</div></div>
+        </div>
+        <div class="brand-stats">
+          <div class="brand-stat"><div class="brand-stat-val">12</div><div class="brand-stat-lbl">Campaigns</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">3</div><div class="brand-stat-lbl">Platforms</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
+        </div>
+        <div class="brand-platforms">
+          <span class="platform-tag">YouTube Shorts</span>
+          <span class="platform-tag">Naver Blog</span>
+          <span class="platform-tag">Instagram</span>
+        </div>
+      </div>
+      <div class="brand-card">
+        <div class="brand-header">
+          <div class="brand-emoji">&#x1F35C;</div>
+          <div><div class="brand-name">무사짬뽕</div><div class="brand-type">Chinese Jjamppong Franchise</div></div>
+        </div>
+        <div class="brand-stats">
+          <div class="brand-stat"><div class="brand-stat-val">8</div><div class="brand-stat-lbl">Campaigns</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">3</div><div class="brand-stat-lbl">Platforms</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
+        </div>
+        <div class="brand-platforms">
+          <span class="platform-tag">YouTube Shorts</span>
+          <span class="platform-tag">Naver Blog</span>
+          <span class="platform-tag">Instagram</span>
+        </div>
+      </div>
+      <div class="brand-card">
+        <div class="brand-header">
+          <div class="brand-emoji">&#x1F4BC;</div>
+          <div><div class="brand-name">브릿지원</div><div class="brand-type">Franchise Consulting</div></div>
+        </div>
+        <div class="brand-stats">
+          <div class="brand-stat"><div class="brand-stat-val">15</div><div class="brand-stat-lbl">Campaigns</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">4</div><div class="brand-stat-lbl">Platforms</div></div>
+          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
+        </div>
+        <div class="brand-platforms">
+          <span class="platform-tag">YouTube Shorts</span>
+          <span class="platform-tag">Naver Blog</span>
+          <span class="platform-tag">Instagram</span>
+          <span class="platform-tag">Coupang</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automation Workflow -->
+  <div class="section">
+    <div class="section-title"><span>&#x26A1;</span> Campaign Automation Flow</div>
+    <div class="workflow">
+      <div class="wf-step"><div class="wf-step-num">STEP 1</div><div class="wf-step-icon">&#x1F50D;</div><div class="wf-step-text">Product Scraping</div></div>
+      <div class="wf-arrow">&#x25B6;</div>
+      <div class="wf-step"><div class="wf-step-num">STEP 2</div><div class="wf-step-icon">&#x1F916;</div><div class="wf-step-text">AI Content Gen</div></div>
+      <div class="wf-arrow">&#x25B6;</div>
+      <div class="wf-step"><div class="wf-step-num">STEP 3</div><div class="wf-step-icon">&#x1F3AC;</div><div class="wf-step-text">Video Render</div></div>
+      <div class="wf-arrow">&#x25B6;</div>
+      <div class="wf-step"><div class="wf-step-num">STEP 4</div><div class="wf-step-icon">&#x2705;</div><div class="wf-step-text">AI Review</div></div>
+      <div class="wf-arrow">&#x25B6;</div>
+      <div class="wf-step"><div class="wf-step-num">STEP 5</div><div class="wf-step-icon">&#x1F4E4;</div><div class="wf-step-text">Auto Upload</div></div>
+      <div class="wf-arrow">&#x25B6;</div>
+      <div class="wf-step"><div class="wf-step-num">STEP 6</div><div class="wf-step-icon">&#x1F4CA;</div><div class="wf-step-text">Analytics</div></div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="section">
+    <div class="section-title"><span>&#x1F9E9;</span> Core Capabilities</div>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#x1F6D2;</div>
+        <div class="feature-title">Affiliate Product Campaign</div>
+        <div class="feature-desc">Coupang, Naver SmartStore, AliExpress URL 입력 &rarr; AI가 자동으로 리뷰 콘텐츠 + Shorts 영상 생성</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F3AF;</div>
+        <div class="feature-title">Brand Promotion</div>
+        <div class="feature-desc">자사 브랜드 (오레노카츠, 무사짬뽕, 브릿지원) 맞춤 콘텐츠 자동 생성 및 다채널 배포</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F4E6;</div>
+        <div class="feature-title">MCN Bulk Production</div>
+        <div class="feature-desc">엑셀 업로드 &rarr; 수십 개 콘텐츠 야간 자동 생산. Creator별 주제/에셋 지정 가능</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F3A8;</div>
+        <div class="feature-title">Visual Editor</div>
+        <div class="feature-desc">이미지 마커, 영역 하이라이트, 비디오 타임라인 편집, 안티밴 렌더링 지원</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F9D0;</div>
+        <div class="feature-title">AI Content Review</div>
+        <div class="feature-desc">저작권/상표권/FTC/플랫폼 정책/SEO/감정분석 자동 검수 + 원클릭 수정</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F4B0;</div>
+        <div class="feature-title">Cost Tracking</div>
+        <div class="feature-desc">API 호출 실시간 비용 추적. 모델별/프로젝트별/일별 분석. 예산 한도 알림</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Status -->
+  <div class="section">
+    <div class="section-title"><span>&#x1F6E0;</span> Connected Services</div>
+    <div class="status-grid">
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Gemini 2.5 Flash</div><div class="status-detail">Free tier &bull; Primary AI</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Claude Haiku 4.5</div><div class="status-detail">Paid fallback</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Telegram Bot</div><div class="status-detail">@yj_ai_command_bot</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Google Drive</div><div class="status-detail">Asset storage</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Pexels API</div><div class="status-detail">Stock media</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Pixabay API</div><div class="status-detail">Stock media</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Unsplash API</div><div class="status-detail">Stock images</div></div></div>
+      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Command Center</div><div class="status-detail">PyQt6 Desktop</div></div></div>
+    </div>
+  </div>
+
+  <!-- Managed Sites -->
+  <div class="section">
+    <div class="section-title"><span>&#x1F310;</span> Managed Web Properties</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <table class="sites-table">
+        <thead><tr><th>Site</th><th>URL</th><th>Type</th><th>Category</th></tr></thead>
+        <tbody>
+          <tr><td>Alpha Engine v5.7</td><td><a href="https://jyjzzjtube-pixel.github.io/alpha-engine-v3/" target="_blank">alpha-engine-v3</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Finance</td></tr>
+          <tr><td>YJ Tax Master v9.2</td><td><a href="https://jyjzzjtube-pixel.github.io/yjtax-v8/" target="_blank">yjtax-v8</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Tax</td></tr>
+          <tr><td>Founder One</td><td><a href="https://jyjzzjtube-pixel.github.io/founderone-site/" target="_blank">founderone-site</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Startup</td></tr>
+          <tr><td>YJ 행운의 번호</td><td><a href="https://jyjzzjtube-pixel.github.io/lotto-generator/" target="_blank">lotto-generator</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Utility</td></tr>
+          <tr><td>YJ 추천템 블로그</td><td><a href="https://jyjzzjtube-pixel.github.io/coupang-blog/" target="_blank">coupang-blog</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Affiliate</td></tr>
+          <tr><td>쿠팡 오토블로그 Pro</td><td><a href="https://jyjzzjtube-pixel.github.io/coupang-autoblog/" target="_blank">coupang-autoblog</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Affiliate</td></tr>
+          <tr><td>YJ DB 자동화</td><td><a href="https://jyjzzjtube-pixel.github.io/yj-db-automation/" target="_blank">yj-db-automation</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Automation</td></tr>
+          <tr><td>네이버 블로그 마스터</td><td><a href="https://jyjzzjtube-pixel.github.io/naver-blog-master/" target="_blank">naver-blog-master</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Blog</td></tr>
+          <tr><td>제안서 시뮬레이터</td><td><a href="https://jyjzzjtube-pixel.github.io/wonwill-app/" target="_blank">wonwill-app</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Proposal</td></tr>
+          <tr><td>YJ Drive Manager</td><td><a href="https://script.google.com/macros/s/AKfycbyG5607pBRS1tMZZXjmQQNcrLVBUVtr9SBPNzgm2llXI9XH2nzVm8Bg5OfepfDObfM0/exec" target="_blank">Google Apps Script</a></td><td><span class="badge badge-ext">External</span></td><td>Drive</td></tr>
+          <tr><td>Naver Blog (브릿지원)</td><td><a href="https://blog.naver.com/jyjzzj" target="_blank">blog.naver.com/jyjzzj</a></td><td><span class="badge badge-ext">External</span></td><td>Blog</td></tr>
+          <tr><td>Naver Blog (쿠팡)</td><td><a href="https://blog.naver.com/ezsbizteam" target="_blank">blog.naver.com/ezsbizteam</a></td><td><span class="badge badge-ext">External</span></td><td>Affiliate</td></tr>
+          <tr><td>YouTube</td><td><a href="https://www.youtube.com/@jjin_deal" target="_blank">@jjin_deal</a></td><td><span class="badge badge-ext">External</span></td><td>Social</td></tr>
+          <tr><td>Instagram</td><td><a href="https://www.instagram.com/jjin_deal" target="_blank">@jjin_deal</a></td><td><span class="badge badge-ext">External</span></td><td>Social</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="section">
+    <div class="section-title"><span>&#x1F517;</span> Quick Access</div>
+    <div class="cta-row">
+      <a href="https://jyjzzjtube-pixel.github.io/alpha-engine-v3/" target="_blank" class="cta cta-primary">Alpha Engine</a>
+      <a href="https://jyjzzjtube-pixel.github.io/yjtax-v8/" target="_blank" class="cta cta-primary">Tax Master</a>
+      <a href="https://jyjzzjtube-pixel.github.io/founderone-site/" target="_blank" class="cta cta-primary">Founder One</a>
+      <a href="https://blog.naver.com/jyjzzj" target="_blank" class="cta cta-outline">Naver Blog</a>
+      <a href="https://www.youtube.com/@jjin_deal" target="_blank" class="cta cta-outline">YouTube</a>
+      <a href="https://www.instagram.com/jjin_deal" target="_blank" class="cta cta-outline">Instagram</a>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  &copy; 2026 YJ Partners MCN & F&B. All rights reserved.<br>
+  Powered by Gemini AI + Claude AI | Command Center v1.0
+</footer>
+
+<script>
+// Auto-update timestamp
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  const badge = document.querySelector('.header-badge');
+  if (badge) {
+    badge.textContent = 'ONLINE ' + now.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+  }
+});
+</script>
+</body>
+</html>
