@@ -3,106 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YJ Partners MCN & F&B Hub</title>
+<title>YJ MCN Automation Hub</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0f1117;--card:#1a1d29;--card2:#222639;--border:#2d3148;--primary:#6366f1;--primary-light:#818cf8;--accent:#f59e0b;--green:#22c55e;--red:#ef4444;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b}
-body{font-family:'Pretendard Variable','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+:root{--bg:#0f1117;--card:#1a1d29;--card2:#222639;--border:#2d3148;--primary:#6366f1;--primary-light:#818cf8;--accent:#f59e0b;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--naver:#03c75a;--youtube:#ff0000;--insta:#e4405f}
+body{font-family:'Pretendard Variable','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
 a{color:var(--primary-light);text-decoration:none}
-a:hover{text-decoration:underline}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
 
 /* Header */
-.header{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e1b4b 100%);border-bottom:1px solid var(--border);padding:20px 0}
+.header{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e1b4b 100%);border-bottom:1px solid var(--border);padding:16px 0}
 .header-inner{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.logo{display:flex;align-items:center;gap:14px}
-.logo-icon{width:48px;height:48px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#fff;letter-spacing:-1px}
-.logo h1{font-size:22px;font-weight:800;color:#fff}
-.logo p{font-size:12px;color:var(--primary-light);margin-top:2px}
-.header-badge{background:var(--green);color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.5px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#fff}
+.logo h1{font-size:20px;font-weight:800;color:#fff}
+.logo p{font-size:11px;color:var(--primary-light);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-online{background:var(--green);color:#000}
+.badge-cost{background:var(--card2);color:var(--accent);border:1px solid var(--border)}
 
 /* Main */
-.main{max-width:1400px;margin:0 auto;padding:24px}
-
-/* Metrics */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
-.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
-.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.metric.m1::before{background:var(--primary)}
-.metric.m2::before{background:var(--accent)}
-.metric.m3::before{background:var(--green)}
-.metric.m4::before{background:var(--red)}
-.metric-label{font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.metric-value{font-size:28px;font-weight:800;color:#fff}
-.metric-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.main{max-width:1400px;margin:0 auto;padding:20px 24px}
 
 /* Section */
-.section{margin-bottom:28px}
-.section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.section-title span{font-size:18px}
+.section{margin-bottom:24px}
+.section-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.section-title .icon{font-size:18px}
 
-/* Grid 2-col */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+/* 자동화 목차 테이블 */
+.auto-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.auto-table th{background:var(--card2);text-align:left;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--border);letter-spacing:.5px}
+.auto-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.auto-table tr:last-child td{border-bottom:none}
+.auto-table tr[data-step].active{background:rgba(99,102,241,.08)}
+.step-num{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;background:var(--border)}
+.step-num.s1{background:#6366f1}.step-num.s2{background:#8b5cf6}.step-num.s3{background:#06b6d4}
+.step-num.s4{background:#f59e0b}.step-num.s5{background:#ef4444}.step-num.s6{background:#22c55e}
+.step-status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.step-status.pending{background:var(--card2);color:var(--text3)}
+.step-status.running{background:rgba(245,158,11,.15);color:var(--accent);animation:pulse 1.5s infinite}
+.step-status.complete{background:rgba(34,197,94,.15);color:var(--green)}
+.step-status.error{background:rgba(239,68,68,.15);color:var(--red)}
+.step-status.skipped{background:var(--card2);color:var(--text3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* Brand Cards */
-.brand-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:border-color .2s}
-.brand-card:hover{border-color:var(--primary)}
-.brand-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.brand-emoji{font-size:36px}
-.brand-name{font-size:18px;font-weight:700}
-.brand-type{font-size:12px;color:var(--text3)}
-.brand-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
-.brand-stat{text-align:center;background:var(--card2);border-radius:8px;padding:10px}
-.brand-stat-val{font-size:18px;font-weight:700;color:var(--primary-light)}
-.brand-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
-.brand-platforms{display:flex;gap:6px;flex-wrap:wrap}
-.platform-tag{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2)}
+/* 캠페인 제어 패널 */
+.campaign-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px}
+.input-row{display:flex;gap:10px;margin-bottom:14px}
+.input-row input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+.input-row input:focus{border-color:var(--primary)}
+.btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;border:none;transition:all .2s}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-green{background:var(--green);color:#000}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* Feature Grid */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-.feature{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
-.feature-icon{font-size:28px;margin-bottom:10px}
-.feature-title{font-size:15px;font-weight:700;margin-bottom:6px}
-.feature-desc{font-size:13px;color:var(--text2);line-height:1.5}
+/* 브랜드 & 플랫폼 선택 */
+.selector-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.selector-group{display:flex;align-items:center;gap:8px}
+.selector-group label{font-size:12px;color:var(--text2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--card2);color:var(--text2);cursor:pointer;transition:all .2s;user-select:none}
+.chip:hover{border-color:var(--primary)}
+.chip.active{border-color:var(--primary);background:rgba(99,102,241,.15);color:var(--primary-light)}
+.chip.brand-active{border-color:var(--accent);background:rgba(245,158,11,.1);color:var(--accent)}
+.chip .emoji{font-size:14px}
 
-/* Workflow */
-.workflow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0}
-.wf-step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;min-width:160px;text-align:center;flex-shrink:0}
-.wf-step-num{font-size:11px;color:var(--primary-light);font-weight:700;margin-bottom:4px}
-.wf-step-icon{font-size:24px;margin-bottom:6px}
-.wf-step-text{font-size:13px;font-weight:600}
-.wf-arrow{font-size:20px;color:var(--text3);padding:0 4px;flex-shrink:0}
+/* 진행률 바 */
+.progress-bar{width:100%;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin:10px 0}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--green));border-radius:3px;transition:width .5s ease;width:0%}
 
-/* Status */
-.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.status-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px}
-.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.status-dot.on{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.4)}
+/* 3플랫폼 결과 그리드 */
+.output-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1000px){.output-grid{grid-template-columns:1fr}}
+.output-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.output-card-header{padding:14px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.output-card-header .platform-icon{font-size:20px}
+.output-card-header .platform-name{font-size:14px;font-weight:700}
+.output-card-header .platform-badge{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.badge-naver{background:rgba(3,199,90,.15);color:var(--naver)}
+.badge-youtube{background:rgba(255,0,0,.12);color:var(--youtube)}
+.badge-insta{background:rgba(228,64,95,.12);color:var(--insta)}
+.output-card-body{padding:16px;flex:1;display:flex;flex-direction:column;gap:10px}
+.output-field{display:flex;flex-direction:column;gap:4px}
+.output-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.output-value{font-size:13px;color:var(--text);background:var(--card2);border-radius:6px;padding:8px 10px;max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.output-value.title-val{font-size:14px;font-weight:600;max-height:none}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:4px}
+.tag{padding:2px 8px;border-radius:4px;font-size:11px;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+.output-card-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+.output-empty{text-align:center;color:var(--text3);font-size:13px;padding:40px;grid-column:1/-1}
+
+/* 미디어 소스 패널 */
+.media-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.media-tabs{display:flex;border-bottom:1px solid var(--border)}
+.media-tab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;transition:all .2s}
+.media-tab:hover{color:var(--text)}
+.media-tab.active{color:var(--primary-light);border-bottom:2px solid var(--primary)}
+.media-content{padding:16px;min-height:140px}
+.media-search-row{display:flex;gap:8px;margin-bottom:12px}
+.media-search-row input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;outline:none}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.media-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .2s}
+.media-thumb:hover{border-color:var(--primary)}
+
+/* 시스템 상태 */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.status-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px rgba(34,197,94,.4)}
 .status-dot.off{background:var(--text3)}
-.status-name{font-size:13px;font-weight:600}
-.status-detail{font-size:11px;color:var(--text3)}
+.status-name{font-size:12px;font-weight:600}
+.status-detail{font-size:10px;color:var(--text3)}
 
-/* Sites table */
-.sites-table{width:100%;border-collapse:collapse}
-.sites-table th{text-align:left;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--border)}
-.sites-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
-.sites-table tr:hover{background:var(--card2)}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.badge-up{background:rgba(34,197,94,.15);color:var(--green)}
-.badge-gh{background:rgba(99,102,241,.15);color:var(--primary-light)}
-.badge-ext{background:rgba(245,158,11,.15);color:var(--accent)}
+/* 로그 패널 */
+.log-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;max-height:200px;overflow-y:auto;font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;color:var(--text2)}
+.log-line{margin-bottom:2px;opacity:.8}
+.log-line .time{color:var(--text3)}
+.log-line.ok{color:var(--green)}
+.log-line.err{color:var(--red)}
+.log-line.warn{color:var(--accent)}
 
 /* Footer */
-.footer{text-align:center;padding:32px;color:var(--text3);font-size:12px;border-top:1px solid var(--border);margin-top:40px}
+.footer{text-align:center;padding:24px;color:var(--text3);font-size:11px;border-top:1px solid var(--border);margin-top:32px}
 
-/* CTA */
-.cta-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
-.cta{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .2s}
-.cta:hover{opacity:.85;text-decoration:none}
-.cta-primary{background:var(--primary);color:#fff}
-.cta-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+/* 반응형 */
+@media(max-width:768px){
+  .output-grid{grid-template-columns:1fr}
+  .selector-row{flex-direction:column}
+}
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -113,221 +146,531 @@ a:hover{text-decoration:underline}
     <div class="logo">
       <div class="logo-icon">YJ</div>
       <div>
-        <h1>YJ Partners MCN & F&B</h1>
-        <p>Multi-Channel Network Automation Hub</p>
+        <h1>YJ MCN Automation Hub</h1>
+        <p>3-Platform Content Factory</p>
       </div>
     </div>
-    <div class="header-badge">SYSTEM ONLINE</div>
+    <div class="header-right">
+      <span class="badge badge-cost" id="cost-badge">API Cost: ₩0</span>
+      <span class="badge badge-online" id="status-badge">CONNECTING...</span>
+    </div>
   </div>
 </header>
 
 <main class="main">
 
-  <!-- Metrics -->
-  <div class="metrics">
-    <div class="metric m1">
-      <div class="metric-label">Managed Brands</div>
-      <div class="metric-value">3</div>
-      <div class="metric-sub">F&B 2 + Consulting 1</div>
-    </div>
-    <div class="metric m2">
-      <div class="metric-label">Active Platforms</div>
-      <div class="metric-value">5</div>
-      <div class="metric-sub">YouTube, Naver, Instagram, Coupang, TikTok</div>
-    </div>
-    <div class="metric m3">
-      <div class="metric-label">AI Engines</div>
-      <div class="metric-value">2</div>
-      <div class="metric-sub">Gemini 2.5 Flash + Claude Haiku</div>
-    </div>
-    <div class="metric m4">
-      <div class="metric-label">Automation Tools</div>
-      <div class="metric-value">14</div>
-      <div class="metric-sub">Web Apps + Bots + Desktop</div>
-    </div>
+  <!-- 자동화 목차 테이블 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📋</span> 자동화 파이프라인 (목차)</div>
+    <table class="auto-table" id="auto-table">
+      <thead>
+        <tr>
+          <th style="width:50px">Step</th>
+          <th>프로세스</th>
+          <th>모듈</th>
+          <th>Input</th>
+          <th>Output</th>
+          <th style="width:100px">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-step="1">
+          <td><span class="step-num s1">1</span></td>
+          <td><b>상품 스크래핑 / 주제 파싱</b></td>
+          <td>coupang_scraper / pipeline</td>
+          <td>URL 또는 주제 텍스트</td>
+          <td>Product 객체 (제목, 가격, 이미지, 제휴링크)</td>
+          <td><span class="step-status pending" id="step-1">⏸ 대기</span></td>
+        </tr>
+        <tr data-step="2">
+          <td><span class="step-num s2">2</span></td>
+          <td><b>AI 콘텐츠 생성</b><br><small style="color:var(--text3)">Gemini(무료) + Claude(유료)</small></td>
+          <td>ai_generator</td>
+          <td>Product 데이터</td>
+          <td>제목, 본문, 해시태그, 나레이션 ×3</td>
+          <td><span class="step-status pending" id="step-2">⏸ 대기</span></td>
+        </tr>
+        <tr data-step="3">
+          <td><span class="step-num s3">3</span></td>
+          <td><b>미디어 수집</b><br><small style="color:var(--text3)">Pexels+Pixabay+Unsplash+yt-dlp</small></td>
+          <td>media_collector</td>
+          <td>검색 키워드</td>
+          <td>이미지 5-8개 + 스톡 영상</td>
+          <td><span class="step-status pending" id="step-3">⏸ 대기</span></td>
+        </tr>
+        <tr data-step="4">
+          <td><span class="step-num s4">4</span></td>
+          <td><b>썸네일 생성</b></td>
+          <td>thumbnail_generator (Pillow)</td>
+          <td>이미지 + AI 텍스트 + 브랜드</td>
+          <td>플랫폼별 썸네일 3개 (JPEG)</td>
+          <td><span class="step-status pending" id="step-4">⏸ 대기</span></td>
+        </tr>
+        <tr data-step="5">
+          <td><span class="step-num s5">5</span></td>
+          <td><b>영상 렌더링</b><br><small style="color:var(--text3)">MoviePy + Edge-TTS</small></td>
+          <td>video_editor / VideoForge</td>
+          <td>이미지 + 나레이션 + 설정</td>
+          <td>MP4 영상 3개 (1080×1920)</td>
+          <td><span class="step-status pending" id="step-5">⏸ 대기</span></td>
+        </tr>
+        <tr data-step="6">
+          <td><span class="step-num s6">6</span></td>
+          <td><b>자동 업로드 / 발행</b></td>
+          <td>auto_uploader</td>
+          <td>영상 + 콘텐츠 + 썸네일</td>
+          <td>발행 URL (YouTube, Naver, Instagram)</td>
+          <td><span class="step-status pending" id="step-6">⏸ 대기</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="progress-bar"><div class="progress-bar-fill" id="pipeline-progress"></div></div>
   </div>
 
-  <!-- Brands -->
-  <div class="section">
-    <div class="section-title"><span>&#x1F3E2;</span> Managed Brands</div>
-    <div class="grid-2" style="grid-template-columns:1fr 1fr 1fr">
-      <div class="brand-card">
-        <div class="brand-header">
-          <div class="brand-emoji">&#x1F371;</div>
-          <div><div class="brand-name">오레노카츠</div><div class="brand-type">Japanese Tonkatsu Franchise</div></div>
-        </div>
-        <div class="brand-stats">
-          <div class="brand-stat"><div class="brand-stat-val">12</div><div class="brand-stat-lbl">Campaigns</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">3</div><div class="brand-stat-lbl">Platforms</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
-        </div>
-        <div class="brand-platforms">
-          <span class="platform-tag">YouTube Shorts</span>
-          <span class="platform-tag">Naver Blog</span>
-          <span class="platform-tag">Instagram</span>
-        </div>
-      </div>
-      <div class="brand-card">
-        <div class="brand-header">
-          <div class="brand-emoji">&#x1F35C;</div>
-          <div><div class="brand-name">무사짬뽕</div><div class="brand-type">Chinese Jjamppong Franchise</div></div>
-        </div>
-        <div class="brand-stats">
-          <div class="brand-stat"><div class="brand-stat-val">8</div><div class="brand-stat-lbl">Campaigns</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">3</div><div class="brand-stat-lbl">Platforms</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
-        </div>
-        <div class="brand-platforms">
-          <span class="platform-tag">YouTube Shorts</span>
-          <span class="platform-tag">Naver Blog</span>
-          <span class="platform-tag">Instagram</span>
-        </div>
-      </div>
-      <div class="brand-card">
-        <div class="brand-header">
-          <div class="brand-emoji">&#x1F4BC;</div>
-          <div><div class="brand-name">브릿지원</div><div class="brand-type">Franchise Consulting</div></div>
-        </div>
-        <div class="brand-stats">
-          <div class="brand-stat"><div class="brand-stat-val">15</div><div class="brand-stat-lbl">Campaigns</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">4</div><div class="brand-stat-lbl">Platforms</div></div>
-          <div class="brand-stat"><div class="brand-stat-val">Active</div><div class="brand-stat-lbl">Status</div></div>
-        </div>
-        <div class="brand-platforms">
-          <span class="platform-tag">YouTube Shorts</span>
-          <span class="platform-tag">Naver Blog</span>
-          <span class="platform-tag">Instagram</span>
-          <span class="platform-tag">Coupang</span>
-        </div>
-      </div>
+  <!-- 캠페인 제어 패널 -->
+  <div class="campaign-panel">
+    <div class="input-row">
+      <input type="text" id="topic-input" placeholder="쿠팡 URL, 주제 텍스트, 또는 소셜 미디어 URL 입력..." />
+      <button class="btn btn-primary" id="btn-start" onclick="startPipeline()">🚀 파이프라인 시작</button>
+      <button class="btn btn-outline" id="btn-content-only" onclick="generateContentOnly()">📝 콘텐츠만</button>
     </div>
-  </div>
-
-  <!-- Automation Workflow -->
-  <div class="section">
-    <div class="section-title"><span>&#x26A1;</span> Campaign Automation Flow</div>
-    <div class="workflow">
-      <div class="wf-step"><div class="wf-step-num">STEP 1</div><div class="wf-step-icon">&#x1F50D;</div><div class="wf-step-text">Product Scraping</div></div>
-      <div class="wf-arrow">&#x25B6;</div>
-      <div class="wf-step"><div class="wf-step-num">STEP 2</div><div class="wf-step-icon">&#x1F916;</div><div class="wf-step-text">AI Content Gen</div></div>
-      <div class="wf-arrow">&#x25B6;</div>
-      <div class="wf-step"><div class="wf-step-num">STEP 3</div><div class="wf-step-icon">&#x1F3AC;</div><div class="wf-step-text">Video Render</div></div>
-      <div class="wf-arrow">&#x25B6;</div>
-      <div class="wf-step"><div class="wf-step-num">STEP 4</div><div class="wf-step-icon">&#x2705;</div><div class="wf-step-text">AI Review</div></div>
-      <div class="wf-arrow">&#x25B6;</div>
-      <div class="wf-step"><div class="wf-step-num">STEP 5</div><div class="wf-step-icon">&#x1F4E4;</div><div class="wf-step-text">Auto Upload</div></div>
-      <div class="wf-arrow">&#x25B6;</div>
-      <div class="wf-step"><div class="wf-step-num">STEP 6</div><div class="wf-step-icon">&#x1F4CA;</div><div class="wf-step-text">Analytics</div></div>
-    </div>
-  </div>
-
-  <!-- Features -->
-  <div class="section">
-    <div class="section-title"><span>&#x1F9E9;</span> Core Capabilities</div>
-    <div class="features">
-      <div class="feature">
-        <div class="feature-icon">&#x1F6D2;</div>
-        <div class="feature-title">Affiliate Product Campaign</div>
-        <div class="feature-desc">Coupang, Naver SmartStore, AliExpress URL 입력 &rarr; AI가 자동으로 리뷰 콘텐츠 + Shorts 영상 생성</div>
+    <div class="selector-row">
+      <div class="selector-group">
+        <label>브랜드:</label>
+        <span class="chip brand-chip" data-brand="" onclick="selectBrand(this)">없음</span>
+        <span class="chip brand-chip" data-brand="오레노카츠" onclick="selectBrand(this)"><span class="emoji">🍱</span> 오레노카츠</span>
+        <span class="chip brand-chip" data-brand="무사짬뽕" onclick="selectBrand(this)"><span class="emoji">🍜</span> 무사짬뽕</span>
+        <span class="chip brand-chip" data-brand="브릿지원" onclick="selectBrand(this)"><span class="emoji">💼</span> 브릿지원</span>
       </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1F3AF;</div>
-        <div class="feature-title">Brand Promotion</div>
-        <div class="feature-desc">자사 브랜드 (오레노카츠, 무사짬뽕, 브릿지원) 맞춤 콘텐츠 자동 생성 및 다채널 배포</div>
+      <div class="selector-group">
+        <label>플랫폼:</label>
+        <span class="chip platform-chip active" data-platform="naver_blog" onclick="togglePlatform(this)"><span class="emoji">📗</span> 네이버 블로그</span>
+        <span class="chip platform-chip active" data-platform="instagram" onclick="togglePlatform(this)"><span class="emoji">📸</span> 인스타그램 릴스</span>
+        <span class="chip platform-chip active" data-platform="youtube" onclick="togglePlatform(this)"><span class="emoji">▶️</span> 유튜브 쇼츠</span>
       </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1F4E6;</div>
-        <div class="feature-title">MCN Bulk Production</div>
-        <div class="feature-desc">엑셀 업로드 &rarr; 수십 개 콘텐츠 야간 자동 생산. Creator별 주제/에셋 지정 가능</div>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1F3A8;</div>
-        <div class="feature-title">Visual Editor</div>
-        <div class="feature-desc">이미지 마커, 영역 하이라이트, 비디오 타임라인 편집, 안티밴 렌더링 지원</div>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1F9D0;</div>
-        <div class="feature-title">AI Content Review</div>
-        <div class="feature-desc">저작권/상표권/FTC/플랫폼 정책/SEO/감정분석 자동 검수 + 원클릭 수정</div>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1F4B0;</div>
-        <div class="feature-title">Cost Tracking</div>
-        <div class="feature-desc">API 호출 실시간 비용 추적. 모델별/프로젝트별/일별 분석. 예산 한도 알림</div>
+      <div class="selector-group">
+        <label><input type="checkbox" id="auto-upload"> 자동 업로드</label>
       </div>
     </div>
   </div>
 
-  <!-- System Status -->
+  <!-- 3플랫폼 결과 미리보기 -->
   <div class="section">
-    <div class="section-title"><span>&#x1F6E0;</span> Connected Services</div>
-    <div class="status-grid">
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Gemini 2.5 Flash</div><div class="status-detail">Free tier &bull; Primary AI</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Claude Haiku 4.5</div><div class="status-detail">Paid fallback</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Telegram Bot</div><div class="status-detail">@yj_ai_command_bot</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Google Drive</div><div class="status-detail">Asset storage</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Pexels API</div><div class="status-detail">Stock media</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Pixabay API</div><div class="status-detail">Stock media</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Unsplash API</div><div class="status-detail">Stock images</div></div></div>
-      <div class="status-item"><div class="status-dot on"></div><div><div class="status-name">Command Center</div><div class="status-detail">PyQt6 Desktop</div></div></div>
+    <div class="section-title"><span class="icon">📊</span> 3플랫폼 결과 미리보기</div>
+    <div class="output-grid" id="output-grid">
+      <div class="output-empty">파이프라인을 실행하면 3개 플랫폼별 결과가 여기에 표시됩니다</div>
     </div>
   </div>
 
-  <!-- Managed Sites -->
+  <!-- 미디어 소스 패널 -->
   <div class="section">
-    <div class="section-title"><span>&#x1F310;</span> Managed Web Properties</div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
-      <table class="sites-table">
-        <thead><tr><th>Site</th><th>URL</th><th>Type</th><th>Category</th></tr></thead>
-        <tbody>
-          <tr><td>Alpha Engine v5.7</td><td><a href="https://jyjzzjtube-pixel.github.io/alpha-engine-v3/" target="_blank">alpha-engine-v3</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Finance</td></tr>
-          <tr><td>YJ Tax Master v9.2</td><td><a href="https://jyjzzjtube-pixel.github.io/yjtax-v8/" target="_blank">yjtax-v8</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Tax</td></tr>
-          <tr><td>Founder One</td><td><a href="https://jyjzzjtube-pixel.github.io/founderone-site/" target="_blank">founderone-site</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Startup</td></tr>
-          <tr><td>YJ 행운의 번호</td><td><a href="https://jyjzzjtube-pixel.github.io/lotto-generator/" target="_blank">lotto-generator</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Utility</td></tr>
-          <tr><td>YJ 추천템 블로그</td><td><a href="https://jyjzzjtube-pixel.github.io/coupang-blog/" target="_blank">coupang-blog</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Affiliate</td></tr>
-          <tr><td>쿠팡 오토블로그 Pro</td><td><a href="https://jyjzzjtube-pixel.github.io/coupang-autoblog/" target="_blank">coupang-autoblog</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Affiliate</td></tr>
-          <tr><td>YJ DB 자동화</td><td><a href="https://jyjzzjtube-pixel.github.io/yj-db-automation/" target="_blank">yj-db-automation</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Automation</td></tr>
-          <tr><td>네이버 블로그 마스터</td><td><a href="https://jyjzzjtube-pixel.github.io/naver-blog-master/" target="_blank">naver-blog-master</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Blog</td></tr>
-          <tr><td>제안서 시뮬레이터</td><td><a href="https://jyjzzjtube-pixel.github.io/wonwill-app/" target="_blank">wonwill-app</a></td><td><span class="badge badge-gh">GitHub</span></td><td>Proposal</td></tr>
-          <tr><td>YJ Drive Manager</td><td><a href="https://script.google.com/macros/s/AKfycbyG5607pBRS1tMZZXjmQQNcrLVBUVtr9SBPNzgm2llXI9XH2nzVm8Bg5OfepfDObfM0/exec" target="_blank">Google Apps Script</a></td><td><span class="badge badge-ext">External</span></td><td>Drive</td></tr>
-          <tr><td>Naver Blog (브릿지원)</td><td><a href="https://blog.naver.com/jyjzzj" target="_blank">blog.naver.com/jyjzzj</a></td><td><span class="badge badge-ext">External</span></td><td>Blog</td></tr>
-          <tr><td>Naver Blog (쿠팡)</td><td><a href="https://blog.naver.com/ezsbizteam" target="_blank">blog.naver.com/ezsbizteam</a></td><td><span class="badge badge-ext">External</span></td><td>Affiliate</td></tr>
-          <tr><td>YouTube</td><td><a href="https://www.youtube.com/@jjin_deal" target="_blank">@jjin_deal</a></td><td><span class="badge badge-ext">External</span></td><td>Social</td></tr>
-          <tr><td>Instagram</td><td><a href="https://www.instagram.com/jjin_deal" target="_blank">@jjin_deal</a></td><td><span class="badge badge-ext">External</span></td><td>Social</td></tr>
-        </tbody>
-      </table>
+    <div class="section-title"><span class="icon">🖼️</span> 미디어 소스</div>
+    <div class="media-panel">
+      <div class="media-tabs">
+        <button class="media-tab active" onclick="switchMediaTab('stock',this)">📷 무료 스톡</button>
+        <button class="media-tab" onclick="switchMediaTab('social',this)">🎵 소셜 추출</button>
+        <button class="media-tab" onclick="switchMediaTab('ai',this)">🤖 AI 생성</button>
+      </div>
+      <div class="media-content" id="media-content">
+        <div class="media-search-row">
+          <input type="text" id="media-query" placeholder="검색어 입력 (예: 돈카츠, 프랜차이즈)" />
+          <button class="btn btn-sm btn-primary" onclick="searchMedia()">검색</button>
+        </div>
+        <div class="media-grid" id="media-results"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Quick Links -->
+  <!-- 실행 로그 -->
   <div class="section">
-    <div class="section-title"><span>&#x1F517;</span> Quick Access</div>
-    <div class="cta-row">
-      <a href="https://jyjzzjtube-pixel.github.io/alpha-engine-v3/" target="_blank" class="cta cta-primary">Alpha Engine</a>
-      <a href="https://jyjzzjtube-pixel.github.io/yjtax-v8/" target="_blank" class="cta cta-primary">Tax Master</a>
-      <a href="https://jyjzzjtube-pixel.github.io/founderone-site/" target="_blank" class="cta cta-primary">Founder One</a>
-      <a href="https://blog.naver.com/jyjzzj" target="_blank" class="cta cta-outline">Naver Blog</a>
-      <a href="https://www.youtube.com/@jjin_deal" target="_blank" class="cta cta-outline">YouTube</a>
-      <a href="https://www.instagram.com/jjin_deal" target="_blank" class="cta cta-outline">Instagram</a>
+    <div class="section-title"><span class="icon">📜</span> 실행 로그</div>
+    <div class="log-panel" id="log-panel">
+      <div class="log-line"><span class="time">[--:--:--]</span> 시스템 대기 중... 파이프라인을 시작하세요.</div>
     </div>
+  </div>
+
+  <!-- 시스템 상태 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🔌</span> 연결 서비스</div>
+    <div class="status-grid" id="status-grid"></div>
   </div>
 
 </main>
 
 <footer class="footer">
-  &copy; 2026 YJ Partners MCN & F&B. All rights reserved.<br>
-  Powered by Gemini AI + Claude AI | Command Center v1.0
+  &copy; 2026 YJ Partners MCN. Powered by Gemini AI + Claude AI + MoviePy + Edge-TTS<br>
+  Backend: Flask API (port 5001) | Frontend: Vanilla JS + SSE
 </footer>
 
 <script>
-// Auto-update timestamp
+// ═══════════════════════════════════════════════════════════════
+// 상태 관리
+// ═══════════════════════════════════════════════════════════════
+const API = '';  // 같은 호스트
+let currentJob = null;
+let eventSource = null;
+let selectedBrand = '';
+let currentMediaTab = 'stock';
+
+// ═══════════════════════════════════════════════════════════════
+// 초기화
+// ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  const now = new Date();
-  const badge = document.querySelector('.header-badge');
-  if (badge) {
-    badge.textContent = 'ONLINE ' + now.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
-  }
+  checkHealth();
+  setInterval(checkHealth, 30000);
+  // 기본 브랜드 = 없음
+  document.querySelector('.brand-chip[data-brand=""]').classList.add('brand-active');
 });
+
+async function checkHealth() {
+  try {
+    const resp = await fetch(API + '/api/health');
+    const data = await resp.json();
+    document.getElementById('status-badge').textContent = 'ONLINE ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('status-badge').className = 'badge badge-online';
+    renderServices(data.services);
+  } catch(e) {
+    document.getElementById('status-badge').textContent = 'OFFLINE';
+    document.getElementById('status-badge').className = 'badge';
+    document.getElementById('status-badge').style.cssText = 'background:var(--red);color:#fff';
+  }
+}
+
+function renderServices(services) {
+  const grid = document.getElementById('status-grid');
+  const svcNames = {
+    gemini: ['Gemini 2.5 Flash', '무료 AI (Primary)'],
+    claude: ['Claude Haiku 4.5', '유료 AI (Fallback)'],
+    pexels: ['Pexels API', '무료 스톡 이미지'],
+    pixabay: ['Pixabay API', '무료 스톡 이미지'],
+    unsplash: ['Unsplash API', '무료 스톡 이미지'],
+  };
+  grid.innerHTML = Object.entries(services).map(([key, ok]) =>
+    `<div class="status-item">
+      <div class="status-dot ${ok?'on':'off'}"></div>
+      <div><div class="status-name">${svcNames[key]?.[0]||key}</div><div class="status-detail">${svcNames[key]?.[1]||''}</div></div>
+    </div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 브랜드 / 플랫폼 선택
+// ═══════════════════════════════════════════════════════════════
+function selectBrand(el) {
+  document.querySelectorAll('.brand-chip').forEach(c => c.classList.remove('brand-active'));
+  el.classList.add('brand-active');
+  selectedBrand = el.dataset.brand;
+}
+
+function togglePlatform(el) {
+  el.classList.toggle('active');
+}
+
+function getSelectedPlatforms() {
+  return [...document.querySelectorAll('.platform-chip.active')].map(el => el.dataset.platform);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 파이프라인 시작
+// ═══════════════════════════════════════════════════════════════
+async function startPipeline() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) { alert('주제 또는 URL을 입력하세요'); return; }
+
+  const platforms = getSelectedPlatforms();
+  if (!platforms.length) { alert('플랫폼을 1개 이상 선택하세요'); return; }
+
+  const autoUpload = document.getElementById('auto-upload').checked;
+
+  // UI 리셋
+  resetSteps();
+  clearLog();
+  document.getElementById('output-grid').innerHTML = '<div class="output-empty">파이프라인 실행 중...</div>';
+  document.getElementById('btn-start').disabled = true;
+
+  addLog('파이프라인 시작: ' + topic, 'ok');
+  addLog('브랜드: ' + (selectedBrand || '없음') + ' | 플랫폼: ' + platforms.join(', '));
+
+  try {
+    const resp = await fetch(API + '/api/campaign/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        topic,
+        brand: selectedBrand,
+        platforms,
+        persona: '',
+        auto_upload: autoUpload,
+      }),
+    });
+    const data = await resp.json();
+    if (data.error) { addLog('오류: ' + data.error, 'err'); return; }
+
+    currentJob = data.job_id;
+    addLog('Job ID: ' + currentJob);
+
+    // SSE 연결
+    if (eventSource) eventSource.close();
+    eventSource = new EventSource(API + '/api/campaign/stream/' + currentJob);
+    eventSource.onmessage = (e) => handleSSE(JSON.parse(e.data));
+    eventSource.onerror = () => {
+      addLog('SSE 연결 종료', 'warn');
+      eventSource.close();
+      document.getElementById('btn-start').disabled = false;
+    };
+  } catch(e) {
+    addLog('서버 연결 실패: ' + e.message, 'err');
+    document.getElementById('btn-start').disabled = false;
+  }
+}
+
+function handleSSE(msg) {
+  if (msg.type === 'step') {
+    updateStep(msg.step, msg.status, msg.detail);
+    const progress = (msg.step / 6) * 100;
+    document.getElementById('pipeline-progress').style.width = progress + '%';
+    addLog(`[Step ${msg.step}] ${msg.name}: ${msg.detail}`, msg.status === 'error' ? 'err' : 'ok');
+  }
+  if (msg.type === 'complete' || msg.type === 'done') {
+    const results = msg.results;
+    if (results) renderOutputCards(results);
+    document.getElementById('pipeline-progress').style.width = '100%';
+    addLog('파이프라인 완료!', 'ok');
+    document.getElementById('btn-start').disabled = false;
+    if (eventSource) eventSource.close();
+  }
+  if (msg.type === 'error') {
+    addLog('파이프라인 오류: ' + msg.error, 'err');
+    document.getElementById('btn-start').disabled = false;
+    if (eventSource) eventSource.close();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 콘텐츠만 생성 (영상 없이)
+// ═══════════════════════════════════════════════════════════════
+async function generateContentOnly() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) { alert('주제 또는 URL을 입력하세요'); return; }
+
+  const platforms = getSelectedPlatforms();
+  document.getElementById('btn-content-only').disabled = true;
+  addLog('AI 콘텐츠 생성 시작 (영상 제외): ' + topic, 'ok');
+
+  try {
+    const resp = await fetch(API + '/api/content/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ topic, brand: selectedBrand, platforms }),
+    });
+    const data = await resp.json();
+    if (data.error) { addLog('오류: ' + data.error, 'err'); return; }
+
+    // 결과를 output cards 형식으로 변환
+    const results = { platforms: {} };
+    for (const [pName, content] of Object.entries(data.contents || {})) {
+      results.platforms[pName] = { content, video: null, thumbnail: null };
+    }
+    renderOutputCards(results);
+    addLog('AI 콘텐츠 생성 완료', 'ok');
+  } catch(e) {
+    addLog('오류: ' + e.message, 'err');
+  } finally {
+    document.getElementById('btn-content-only').disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 단계 상태 업데이트
+// ═══════════════════════════════════════════════════════════════
+function updateStep(step, status, detail) {
+  const el = document.getElementById('step-' + step);
+  if (!el) return;
+  const icons = {pending:'⏸',running:'🔄',complete:'✅',error:'❌',skipped:'⏭'};
+  const labels = {pending:'대기',running:'실행 중',complete:'완료',error:'오류',skipped:'건너뜀'};
+  el.className = 'step-status ' + status;
+  el.textContent = (icons[status]||'') + ' ' + (labels[status]||status);
+  // 활성 행 하이라이트
+  document.querySelectorAll('#auto-table tr[data-step]').forEach(tr => tr.classList.remove('active'));
+  if (status === 'running') {
+    const row = document.querySelector(`#auto-table tr[data-step="${step}"]`);
+    if (row) row.classList.add('active');
+  }
+}
+
+function resetSteps() {
+  for (let i = 1; i <= 6; i++) updateStep(i, 'pending', '');
+  document.getElementById('pipeline-progress').style.width = '0%';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3플랫폼 결과 카드 렌더링
+// ═══════════════════════════════════════════════════════════════
+function renderOutputCards(results) {
+  const grid = document.getElementById('output-grid');
+  const platformConfigs = {
+    naver_blog: { icon: '📗', name: '네이버 블로그', badge: 'badge-naver', badgeText: 'Blog' },
+    instagram: { icon: '📸', name: '인스타그램 릴스', badge: 'badge-insta', badgeText: 'Reels' },
+    youtube: { icon: '▶️', name: '유튜브 쇼츠', badge: 'badge-youtube', badgeText: 'Shorts' },
+  };
+
+  let html = '';
+  for (const [pName, pData] of Object.entries(results.platforms || {})) {
+    const cfg = platformConfigs[pName];
+    if (!cfg) continue;
+    const content = pData.content || {};
+
+    // 해시태그 렌더링
+    const hashtags = (content.hashtags || []);
+    const tagHtml = hashtags.map(t => `<span class="tag">${t}</span>`).join('');
+
+    // 비디오 상태
+    const hasVideo = pData.video && pData.video !== 'None' && pData.video !== '';
+    const videoBtn = hasVideo
+      ? `<button class="btn btn-sm btn-green" onclick="window.open('/api/file/${encodeURIComponent(pData.video)}')">📥 영상 다운로드</button>`
+      : '';
+
+    html += `
+    <div class="output-card">
+      <div class="output-card-header">
+        <span class="platform-icon">${cfg.icon}</span>
+        <span class="platform-name">${cfg.name}</span>
+        <span class="platform-badge ${cfg.badge}">${cfg.badgeText}</span>
+      </div>
+      <div class="output-card-body">
+        <div class="output-field">
+          <span class="output-label">제목</span>
+          <div class="output-value title-val">${escHtml(content.title || '(생성 대기)')}</div>
+        </div>
+        <div class="output-field">
+          <span class="output-label">${pName==='naver_blog'?'본문':'캡션/설명'}</span>
+          <div class="output-value">${escHtml(content.body || content.caption || content.description || '(없음)')}</div>
+        </div>
+        <div class="output-field">
+          <span class="output-label">해시태그 (${hashtags.length})</span>
+          <div class="tag-cloud">${tagHtml || '<span style="color:var(--text3);font-size:12px">(없음)</span>'}</div>
+        </div>
+        ${content.narration ? `<div class="output-field">
+          <span class="output-label">나레이션 (${content.narration.length}장면)</span>
+          <div class="output-value">${(content.narration||[]).map((s,i)=>`${i+1}. ${escHtml(s)}`).join('\n')}</div>
+        </div>` : ''}
+      </div>
+      <div class="output-card-footer">
+        <button class="btn btn-sm btn-outline" onclick="copyContent('${pName}')">📋 복사</button>
+        ${videoBtn}
+      </div>
+    </div>`;
+  }
+
+  grid.innerHTML = html || '<div class="output-empty">결과 없음</div>';
+  // 결과 데이터 저장 (복사용)
+  window._lastResults = results;
+}
+
+function copyContent(platform) {
+  if (!window._lastResults) return;
+  const pData = window._lastResults.platforms[platform];
+  if (!pData || !pData.content) return;
+  const c = pData.content;
+  let text = '';
+  if (c.title) text += '제목: ' + c.title + '\n\n';
+  if (c.body) text += c.body + '\n\n';
+  if (c.caption) text += c.caption + '\n\n';
+  if (c.hashtags) text += (c.hashtags || []).join(' ') + '\n';
+  navigator.clipboard.writeText(text).then(() => addLog(platform + ' 콘텐츠 클립보드 복사 완료', 'ok'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 미디어 검색
+// ═══════════════════════════════════════════════════════════════
+function switchMediaTab(tab, el) {
+  currentMediaTab = tab;
+  document.querySelectorAll('.media-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  const content = document.getElementById('media-content');
+  const input = document.getElementById('media-query');
+  const results = document.getElementById('media-results');
+  results.innerHTML = '';
+
+  if (tab === 'stock') {
+    input.placeholder = '검색어 입력 (예: 돈카츠, 프랜차이즈)';
+  } else if (tab === 'social') {
+    input.placeholder = 'TikTok, YouTube, Instagram URL 붙여넣기';
+  } else {
+    input.placeholder = 'AI 이미지 생성 프롬프트 (예: 프리미엄 돈카츠 접시 위에)';
+  }
+}
+
+async function searchMedia() {
+  const query = document.getElementById('media-query').value.trim();
+  if (!query) return;
+
+  const results = document.getElementById('media-results');
+  results.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px">검색 중...</div>';
+
+  try {
+    let endpoint, body;
+    if (currentMediaTab === 'stock') {
+      endpoint = '/api/media/search';
+      body = { query, type: 'image' };
+    } else if (currentMediaTab === 'social') {
+      endpoint = '/api/media/social';
+      body = { url: query };
+    } else {
+      endpoint = '/api/media/ai-generate';
+      body = { prompt: query, type: 'image' };
+    }
+
+    const resp = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json();
+
+    if (data.error) {
+      results.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px">오류: ${escHtml(data.error)}</div>`;
+      return;
+    }
+
+    if (currentMediaTab === 'stock' && data.results) {
+      results.innerHTML = data.results.map(img =>
+        `<img class="media-thumb" src="${img.thumb || img.url}" title="${escHtml(img.title || '')}" onclick="addLog('이미지 선택: ${escHtml(img.title||'')}','ok')" />`
+      ).join('');
+    } else if (currentMediaTab === 'social') {
+      results.innerHTML = `<div style="color:var(--green);font-size:12px;padding:10px">✅ 다운로드 완료: ${JSON.stringify(data.result || data)}</div>`;
+    } else {
+      results.innerHTML = `<div style="color:var(--green);font-size:12px;padding:10px">✅ ${data.response || JSON.stringify(data)}</div>`;
+    }
+    addLog('미디어 검색 완료: ' + query, 'ok');
+  } catch(e) {
+    results.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px">오류: ${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 로그
+// ═══════════════════════════════════════════════════════════════
+function addLog(msg, type) {
+  const panel = document.getElementById('log-panel');
+  const time = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : type === 'warn' ? 'warn' : '';
+  panel.innerHTML += `<div class="log-line ${cls}"><span class="time">[${time}]</span> ${escHtml(msg)}</div>`;
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log-panel').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════════════════════════
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
