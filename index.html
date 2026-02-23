@@ -249,6 +249,19 @@ input,textarea,select{font-family:inherit}
         <span class="chip platform-chip active" data-platform="youtube" onclick="togglePlatform(this)"><span class="emoji">▶️</span> 유튜브 쇼츠</span>
       </div>
       <div class="selector-group">
+        <label>AI:</label>
+        <select id="ai-provider" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px">
+          <option value="">자동 (무료 우선)</option>
+          <option value="ollama">Ollama 로컬 (무료)</option>
+          <option value="gemini">Gemini Flash (무료)</option>
+          <option value="gemini_pro">Gemini Pro (무료)</option>
+          <option value="claude_haiku">Claude Haiku (저가)</option>
+          <option value="openai_mini">GPT-4o-mini (저가)</option>
+          <option value="openai">GPT-4o (중가)</option>
+          <option value="claude_sonnet">Claude Sonnet (고가)</option>
+        </select>
+      </div>
+      <div class="selector-group">
         <label><input type="checkbox" id="auto-upload"> 자동 업로드</label>
       </div>
     </div>
@@ -278,6 +291,17 @@ input,textarea,select{font-family:inherit}
         </div>
         <div class="media-grid" id="media-results"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- 캠페인 히스토리 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📂</span> 캠페인 히스토리 <button class="btn btn-sm btn-outline" onclick="loadHistory()" style="margin-left:8px">새로고침</button></div>
+    <div id="history-panel" style="max-height:200px;overflow-y:auto">
+      <table class="auto-table" id="history-table">
+        <thead><tr><th>ID</th><th>주제</th><th>브랜드</th><th>플랫폼</th><th>상태</th><th>비용</th><th>날짜</th><th></th></tr></thead>
+        <tbody id="history-body"><tr><td colspan="8" style="text-align:center;color:var(--text3)">로딩 중...</td></tr></tbody>
+      </table>
     </div>
   </div>
 
@@ -317,7 +341,10 @@ let currentMediaTab = 'stock';
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   checkHealth();
+  loadHistory();
+  updateCostBadge();
   setInterval(checkHealth, 30000);
+  setInterval(updateCostBadge, 60000);  // 1분마다 비용 업데이트
   // 기본 브랜드 = 없음
   document.querySelector('.brand-chip[data-brand=""]').classList.add('brand-active');
 });
@@ -339,11 +366,18 @@ async function checkHealth() {
 function renderServices(services) {
   const grid = document.getElementById('status-grid');
   const svcNames = {
-    gemini: ['Gemini 2.5 Flash', '무료 AI (Primary)'],
-    claude: ['Claude Haiku 4.5', '유료 AI (Fallback)'],
-    pexels: ['Pexels API', '무료 스톡 이미지'],
-    pixabay: ['Pixabay API', '무료 스톡 이미지'],
-    unsplash: ['Unsplash API', '무료 스톡 이미지'],
+    ollama: ['Ollama llama3.1', '로컬 무료 AI'],
+    gemini: ['Gemini Flash', '무료 AI'],
+    gemini_pro: ['Gemini Pro', '무료 울트라급'],
+    claude_haiku: ['Claude Haiku', '저가 API'],
+    openai_mini: ['GPT-4o-mini', '저가 API'],
+    openai: ['GPT-4o', '중가 API'],
+    claude_sonnet: ['Claude Sonnet', '고가 API'],
+    openai_o1: ['OpenAI o1', '고가 API'],
+    pexels: ['Pexels', '무료 스톡'],
+    pixabay: ['Pixabay', '무료 스톡'],
+    unsplash: ['Unsplash', '무료 스톡'],
+    openclaw: ['OpenClaw', '텔레그램 봇'],
   };
   grid.innerHTML = Object.entries(services).map(([key, ok]) =>
     `<div class="status-item">
@@ -670,6 +704,67 @@ function clearLog() {
 function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 캠페인 히스토리
+// ═══════════════════════════════════════════════════════════════
+async function loadHistory() {
+  try {
+    const resp = await fetch(API + '/api/campaigns?limit=20');
+    const data = await resp.json();
+    const body = document.getElementById('history-body');
+    if (!data.length) {
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3)">캠페인 이력 없음</td></tr>';
+      return;
+    }
+    body.innerHTML = data.map(c => {
+      const statusCls = c.status==='complete'?'ok':c.status==='error'?'err':'';
+      const statusIcon = c.status==='complete'?'✅':c.status==='error'?'❌':c.status==='running'?'🔄':'⏸';
+      const platforms = c.platforms ? JSON.parse(c.platforms).join(', ') : '';
+      const date = c.created_at ? new Date(c.created_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      return `<tr>
+        <td style="font-family:monospace;font-size:11px">${c.id.slice(0,8)}</td>
+        <td><b>${escHtml(c.topic?.slice(0,30))}</b></td>
+        <td>${escHtml(c.brand||'없음')}</td>
+        <td style="font-size:11px">${escHtml(platforms)}</td>
+        <td><span class="log-line ${statusCls}" style="margin:0">${statusIcon} ${c.status}</span></td>
+        <td style="font-size:11px">$${(c.cost_usd||0).toFixed(4)}</td>
+        <td style="font-size:11px">${date}</td>
+        <td>${c.status==='complete'?`<button class="btn btn-sm btn-outline" onclick="reuseCampaign('${c.id}')">재사용</button>`:''}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('history-body').innerHTML =
+      '<tr><td colspan="8" style="color:var(--red)">히스토리 로딩 실패</td></tr>';
+  }
+}
+
+async function reuseCampaign(id) {
+  try {
+    const resp = await fetch(API + '/api/campaigns/' + id);
+    const data = await resp.json();
+    if (data.topic) {
+      document.getElementById('topic-input').value = data.topic;
+      if (data.brand) {
+        const chip = document.querySelector(`.brand-chip[data-brand="${data.brand}"]`);
+        if (chip) selectBrand(chip);
+      }
+      addLog('캠페인 재사용: ' + data.topic, 'ok');
+    }
+  } catch(e) { addLog('캠페인 로딩 실패: ' + e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 비용 실시간 업데이트
+// ═══════════════════════════════════════════════════════════════
+async function updateCostBadge() {
+  try {
+    const resp = await fetch(API + '/api/cost');
+    const data = await resp.json();
+    const krw = ((data.total_usd || 0) * 1400).toFixed(0);
+    document.getElementById('cost-badge').textContent = `API Cost: ₩${Number(krw).toLocaleString()}`;
+  } catch(e) {}
 }
 </script>
 </body>

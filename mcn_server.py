@@ -31,12 +31,40 @@ from affiliate_system.config import (
 )
 from affiliate_system.models import Platform, PLATFORM_PRESETS
 
+# ── 커맨드센터 AI 서비스 연동 ──
+sys.path.insert(0, str(PROJECT_DIR))
+from command_center.config import OPENAI_API_KEY, OLLAMA_BASE_URL, OLLAMA_MODEL, AI_PROVIDERS
+from command_center.services.ai_service import AIService
+
+ai_service = AIService()
+
 # ── Flask 앱 설정 ──
 app = Flask(__name__, static_folder=str(Path(__file__).parent))
 CORS(app)
 
-# ── Job 저장소 ──
+# ── Job 저장소 & 캠페인 히스토리 ──
 jobs = {}  # job_id -> {status, step, progress, results, events, error}
+campaign_history = []  # 캠페인 이력 (최근 50개)
+
+# ── 캠페인 DB (SQLite) ──
+import sqlite3
+CAMPAIGN_DB = str(PROJECT_DIR / "mcn_campaigns.db")
+
+def _init_campaign_db():
+    """캠페인 히스토리 DB 초기화"""
+    conn = sqlite3.connect(CAMPAIGN_DB)
+    conn.execute("""CREATE TABLE IF NOT EXISTS campaigns (
+        id TEXT PRIMARY KEY,
+        topic TEXT, brand TEXT, platforms TEXT,
+        ai_provider TEXT, cost_usd REAL DEFAULT 0,
+        status TEXT DEFAULT 'pending',
+        results TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )""")
+    conn.commit()
+    conn.close()
+
+_init_campaign_db()
 
 # ── 브랜드 설정 ──
 BRANDS = {
@@ -221,20 +249,31 @@ def index():
     return send_file(str(Path(__file__).parent / 'index.html'))
 
 
-# ── 건강 체크 ──
+# ── 건강 체크 (AI 8개 + 미디어 + OpenClaw) ──
 @app.route('/api/health')
 def health():
-    services = {
-        "gemini": bool(GEMINI_API_KEY),
-        "claude": bool(ANTHROPIC_API_KEY),
-        "pexels": bool(PEXELS_API_KEY),
-        "pixabay": bool(PIXABAY_API_KEY),
-        "unsplash": bool(UNSPLASH_ACCESS_KEY),
-    }
+    # AI 프로바이더 상태
+    providers = ai_service.list_providers()
+    services = {}
+    for p in providers:
+        services[p["name"]] = p["available"]
+    # 미디어 API
+    services["pexels"] = bool(PEXELS_API_KEY)
+    services["pixabay"] = bool(PIXABAY_API_KEY)
+    services["unsplash"] = bool(UNSPLASH_ACCESS_KEY)
+    # OpenClaw 게이트웨이
+    try:
+        import requests as req
+        oc = req.get("http://127.0.0.1:18792/__openclaw__/health", timeout=2)
+        services["openclaw"] = oc.status_code == 200
+    except Exception:
+        services["openclaw"] = False
+
     return jsonify({
         "status": "online",
         "services": services,
         "active_jobs": sum(1 for j in jobs.values() if j["status"] == "running"),
+        "ai_providers": providers,
         "timestamp": datetime.now().isoformat(),
     })
 
@@ -273,6 +312,9 @@ def start_campaign():
         "created_at": datetime.now().isoformat(),
     }
 
+    # 캠페인 히스토리 저장 (시작)
+    _save_campaign(job_id, topic, brand, platforms, "running")
+
     def worker():
         job = jobs[job_id]
         job["status"] = "running"
@@ -282,10 +324,14 @@ def start_campaign():
             job["results"] = results
             job["status"] = "complete"
             events_queue.put({"type": "complete", "results": results})
+            # 캠페인 히스토리 업데이트 (완료)
+            _save_campaign(job_id, topic, brand, platforms, "complete",
+                           results=_safe_serialize(results))
         except Exception as e:
             job["error"] = str(e)
             job["status"] = "error"
             events_queue.put({"type": "error", "error": str(e)})
+            _save_campaign(job_id, topic, brand, platforms, "error")
 
     thread = threading.Thread(target=worker, daemon=True)
     thread.start()
@@ -442,15 +488,100 @@ def ai_generate():
         return jsonify({"error": str(e)}), 500
 
 
-# ── 비용 현황 ──
+# ── 비용 현황 (커맨드센터 연동) ──
 @app.route('/api/cost')
 def get_cost():
     try:
         from api_cost_tracker import CostTracker
         tracker = CostTracker()
-        return jsonify(tracker.get_summary())
+        summary = tracker.get_summary()
     except Exception:
-        return jsonify({"total_usd": 0, "note": "비용 추적기 없음"})
+        summary = {"total_usd": 0}
+
+    # AI 프로바이더별 비용 정보
+    summary["providers"] = {}
+    for name, info in AI_PROVIDERS.items():
+        summary["providers"][name] = {
+            "model": info["model"],
+            "cost_tier": info["cost"],
+        }
+    return jsonify(summary)
+
+
+# ── AI 프로바이더 목록 ──
+@app.route('/api/ai/providers')
+def ai_providers():
+    return jsonify(ai_service.list_providers())
+
+
+# ── AI 직접 호출 (테스트/단독 사용) ──
+@app.route('/api/ai/ask', methods=['POST'])
+def ai_ask():
+    data = request.json or {}
+    prompt = data.get("prompt", "").strip()
+    provider = data.get("provider")  # None이면 자동 폴백
+    if not prompt:
+        return jsonify({"error": "prompt 필수"}), 400
+
+    try:
+        resp = ai_service.ask(prompt, provider=provider)
+        return jsonify({
+            "text": resp.text,
+            "provider": resp.provider,
+            "model": resp.model,
+            "tokens": {"input": resp.input_tokens, "output": resp.output_tokens},
+            "cost_usd": resp.cost_usd,
+            "elapsed_ms": resp.elapsed_ms,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── 캠페인 히스토리 ──
+@app.route('/api/campaigns')
+def list_campaigns():
+    """최근 캠페인 이력 조회"""
+    limit = request.args.get("limit", 20, type=int)
+    conn = sqlite3.connect(CAMPAIGN_DB)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        "SELECT * FROM campaigns ORDER BY created_at DESC LIMIT ?", (limit,)
+    ).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/campaigns/<campaign_id>')
+def get_campaign(campaign_id):
+    """특정 캠페인 상세 조회"""
+    conn = sqlite3.connect(CAMPAIGN_DB)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT * FROM campaigns WHERE id = ?", (campaign_id,)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"error": "캠페인 없음"}), 404
+    result = dict(row)
+    # 결과 JSON 파싱
+    if result.get("results"):
+        try:
+            result["results"] = json.loads(result["results"])
+        except Exception:
+            pass
+    return jsonify(result)
+
+
+def _save_campaign(campaign_id, topic, brand, platforms, status, results=None, cost=0.0):
+    """캠페인 이력 DB 저장"""
+    conn = sqlite3.connect(CAMPAIGN_DB)
+    conn.execute("""INSERT OR REPLACE INTO campaigns
+        (id, topic, brand, platforms, status, results, cost_usd, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (campaign_id, topic, brand, json.dumps(platforms),
+         status, json.dumps(results) if results else None,
+         cost, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
 
 
 # ── 파일 다운로드 (렌더링된 영상/이미지) ──
