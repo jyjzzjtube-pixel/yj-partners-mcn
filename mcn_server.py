@@ -1303,20 +1303,33 @@ def v2_confirm_execute(job_id):
                 from affiliate_system.drive_manager import DriveArchiver
                 archiver = DriveArchiver()
                 if archiver.authenticate():
-                    # V2 파일 수집 — 빈 경로 필터링!
+                    # V2 플랫폼별 파일 분류 — 바로 클릭해서 볼 수 있는 구조
                     valid_images = [p for p in blog_images if p and Path(p).exists()]
-                    drive_files = {"images": valid_images, "renders": [], "audio": [], "logs": []}
+                    drive_files = {
+                        # 네이버블로그: 블로그 HTML + 이미지
+                        "naver_blog": [],
+                        # 인스타그램숏츠: 숏폼 영상 (동일 영상 공유)
+                        "instagram_shorts": [],
+                        # 유튜브숏츠: 숏폼 영상 (동일 영상 공유)
+                        "youtube_shorts": [],
+                    }
 
-                    # 블로그 HTML 파일 저장 후 Drive 업로드
+                    # 네이버블로그 폴더: HTML + 이미지
                     if blog_html:
                         blog_html_path = Path(WORK_DIR) / f"blog_{job_id}.html"
                         blog_html_path.write_text(blog_html, encoding="utf-8")
-                        drive_files["logs"].append(str(blog_html_path))
+                        drive_files["naver_blog"].append(str(blog_html_path))
+                    drive_files["naver_blog"].extend(valid_images)
+
+                    # 숏폼 영상 → 인스타그램 + 유튜브 양쪽에 업로드
                     if shorts_path and Path(shorts_path).exists():
-                        drive_files["renders"].append(shorts_path)
+                        drive_files["instagram_shorts"].append(shorts_path)
+                        drive_files["youtube_shorts"].append(shorts_path)
+
+                    # 세탁된 원본 영상도 유튜브 폴더에 추가 (편집용 소스)
                     for lv in laundered_videos:
                         if lv and Path(lv).exists():
-                            drive_files["renders"].append(lv)
+                            drive_files["youtube_shorts"].append(lv)
 
                     # 임시 Campaign 객체 생성 — 재스크래핑 않고 저장된 정보 사용
                     from affiliate_system.models import Campaign, AIContent, CampaignStatus, Product
@@ -1334,13 +1347,16 @@ def v2_confirm_execute(job_id):
                         platform_videos={}, platform_thumbnails={},
                         created_at=datetime.now(),
                     )
-                    archive_result = archiver.archive_campaign(temp_campaign, drive_files)
+                    archive_result = archiver.archive_campaign(
+                        temp_campaign, drive_files, v2=True
+                    )
                     if archive_result["ok"]:
                         job["results"]["drive_url"] = archive_result.get("folder_url", "")
+                        job["results"]["drive_platforms"] = archive_result.get("platform_urls", {})
                         job["events"].put({
                             "type": "v2_step", "step": 10, "name": "drive_archive",
                             "status": "complete",
-                            "detail": f"Drive 아카이빙 완료: {archive_result['files_uploaded']}개 파일",
+                            "detail": f"Drive 아카이빙 완료: {archive_result['files_uploaded']}개 파일 (3 플랫폼)",
                             "timestamp": datetime.now().isoformat(),
                         })
                     else:
