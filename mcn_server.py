@@ -913,8 +913,8 @@ def v2_submit_link(job_id):
             })
 
             try:
-                from affiliate_system.ai_generator import ContentGenerator
-                generator = ContentGenerator()
+                from affiliate_system.ai_generator import AIGenerator
+                generator = AIGenerator()
 
                 # V2 블로그 콘텐츠
                 blog_content = generator.generate_blog_content_v2(product, coupang_link)
