@@ -62,6 +62,16 @@ input,textarea,select{font-family:inherit}
 .btn-sm{padding:6px 14px;font-size:12px}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
+/* 토글 스위치 */
+.toggle-switch{position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px}
+.toggle-switch input{display:none}
+.toggle-slider{width:36px;height:20px;border-radius:10px;background:var(--border);position:relative;transition:all .3s}
+.toggle-slider::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--text3);transition:all .3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--green)}
+.toggle-switch input:checked+.toggle-slider::after{left:18px;background:#fff}
+.toggle-label{color:var(--text2);font-weight:500;font-size:11px}
+.toggle-switch input:checked~.toggle-label{color:var(--green)}
+
 /* 브랜드 & 플랫폼 선택 */
 .selector-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
 .selector-group{display:flex;align-items:center;gap:8px}
@@ -398,11 +408,28 @@ input,textarea,select{font-family:inherit}
           <option value="claude_sonnet">Claude Sonnet (고가)</option>
         </select>
       </div>
-      <div class="selector-group">
-        <label><input type="checkbox" id="auto-upload"> 자동 업로드</label>
-      </div>
-      <div class="selector-group">
-        <label><input type="checkbox" id="drive-archive" checked> ☁️ Drive 아카이빙</label>
+      <div class="selector-group upload-toggles" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <span style="font-weight:600;font-size:13px;color:var(--text2);">🚀 자동 업로드:</span>
+        <label class="toggle-switch" title="YouTube Shorts 업로드">
+          <input type="checkbox" id="upload-youtube">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">📺 YouTube</span>
+        </label>
+        <label class="toggle-switch" title="Instagram Reels 업로드">
+          <input type="checkbox" id="upload-instagram">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">📸 Instagram</span>
+        </label>
+        <label class="toggle-switch" title="네이버 블로그 업로드">
+          <input type="checkbox" id="upload-naver">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">📝 Naver</span>
+        </label>
+        <label class="toggle-switch" title="Google Drive 아카이빙">
+          <input type="checkbox" id="drive-archive" checked>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">☁️ Drive</span>
+        </label>
       </div>
     </div>
   </div>
@@ -556,8 +583,11 @@ async function startPipeline() {
   const platforms = getSelectedPlatforms();
   if (!platforms.length) { alert('플랫폼을 1개 이상 선택하세요'); return; }
 
-  const autoUpload = document.getElementById('auto-upload').checked;
+  const uploadYoutube = document.getElementById('upload-youtube').checked;
+  const uploadInstagram = document.getElementById('upload-instagram').checked;
+  const uploadNaver = document.getElementById('upload-naver').checked;
   const driveArchive = document.getElementById('drive-archive').checked;
+  const autoUpload = uploadYoutube || uploadInstagram || uploadNaver;
 
   // UI 리셋
   resetSteps();
@@ -578,6 +608,9 @@ async function startPipeline() {
         platforms,
         persona: '',
         auto_upload: autoUpload,
+        upload_youtube: uploadYoutube,
+        upload_instagram: uploadInstagram,
+        upload_naver: uploadNaver,
         drive_archive: driveArchive,
       }),
     });

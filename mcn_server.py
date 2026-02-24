@@ -1015,6 +1015,12 @@ def v2_confirm_execute(job_id):
     if job["state"] != V2PipelineState.AWAITING_CONFIRM:
         return jsonify({"error": f"현재 상태: {job['state']}, 실행 확인 불가"}), 400
 
+    # 플랫폼별 업로드 토글 저장
+    confirm_data = request.json or {}
+    job["upload_youtube"] = confirm_data.get("upload_youtube", False)
+    job["upload_instagram"] = confirm_data.get("upload_instagram", False)
+    job["upload_naver"] = confirm_data.get("upload_naver", False)
+
     job["state"] = V2PipelineState.EXECUTING
     job["events"].put({
         "type": "state_change",
@@ -1033,48 +1039,90 @@ def v2_confirm_execute(job_id):
             product_info = job.get("product_info", {})
             product_title = product_info.get("title", "상품")
 
-            # Step 4: 미디어 크롤링
+            # Step 4: 스마트 미디어 크롤링 + AI 이미지 생성
             job["events"].put({
                 "type": "v2_step", "step": 4, "name": "media_crawl",
-                "status": "running", "detail": "블로그 이미지 + 숏폼 영상 수집 중...",
+                "status": "running", "detail": "Gemini 키워드 분석 + 미디어 수집 + AI 이미지 생성...",
                 "timestamp": datetime.now().isoformat(),
             })
             blog_images = []
             video_sources = []
+            ai_images = []
             try:
                 from affiliate_system.media_collector import OmniMediaCollector, MediaCollector
+                from affiliate_system.ai_generator import AIGenerator
                 omni = OmniMediaCollector()
+                gen = AIGenerator()
 
-                # 블로그 이미지 수집 — product_title(str) 전달
-                image_keywords = blog_content.get("image_keywords", [product_title])
+                # ── Gemini SmartMediaMatcher: 주제 분석 → 최적 키워드 생성 ──
+                product_features = product_info.get("features", "")
+                if isinstance(product_features, list):
+                    product_features = ", ".join(product_features)
+                category = product_info.get("category", "")
+                smart_keywords = gen.generate_smart_media_keywords(
+                    product_name=product_title,
+                    category=category,
+                    product_features=product_features,
+                )
+                job["smart_keywords"] = smart_keywords
+                job["category"] = smart_keywords.get("category_detected", category)
+                job["product_name"] = product_title
+
+                # 스마트 키워드로 이미지 검색
+                image_kw_en = smart_keywords.get("image_keywords_en", [product_title])
+                image_kw_ko = smart_keywords.get("image_keywords_ko", [product_title])
+                all_image_kw = image_kw_en + image_kw_ko
                 product_image_urls = product_info.get("image_urls", [])
+
                 blog_images = omni.collect_blog_images(
                     product_title=product_title,
-                    image_keywords=image_keywords,
+                    image_keywords=all_image_kw[:7],
                     product_image_urls=product_image_urls,
                     count=5,
                 )
 
-                # 숏폼 영상 수집 — 영어 키워드 필요
+                # 스마트 키워드로 비디오 검색
+                video_kw_en = smart_keywords.get("video_keywords_en", [])
+                search_en = video_kw_en[0] if video_kw_en else gen.translate_for_search(product_title)
                 try:
-                    from affiliate_system.ai_generator import AIGenerator
-                    gen = AIGenerator()
-                    search_en = gen.translate_for_search(product_title)
                     video_sources = omni.collect_video_sources(
                         product_title=product_title,
                         search_keyword_en=search_en,
-                        count=5,
+                        count=6,
                     )
                 except Exception:
                     video_sources = []
 
+                # ── Gemini Imagen 4.0: AI 이미지 생성 (부족분 보충 + 고퀄 CTA) ──
+                ai_prompts = smart_keywords.get("ai_image_prompts", [])
+                if ai_prompts:
+                    try:
+                        from affiliate_system.config import V2_BLOG_DIR
+                        ai_images = gen.generate_ai_images(
+                            prompts=ai_prompts[:3],
+                            output_dir=str(V2_BLOG_DIR / "ai_generated"),
+                            count_per_prompt=1,
+                            aspect_ratio="9:16",
+                        )
+                        # AI 이미지를 블로그 이미지 풀에 추가
+                        blog_images.extend(ai_images)
+                    except Exception as ai_err:
+                        print(f"[V2] AI 이미지 생성 스킵: {ai_err}")
+
                 job["events"].put({
                     "type": "v2_step", "step": 4, "name": "media_crawl",
                     "status": "complete",
-                    "detail": f"이미지 {len(blog_images)}장 + 영상 {len(video_sources)}개 수집",
+                    "detail": (
+                        f"크롤링 이미지 {len(blog_images)-len(ai_images)}장 + "
+                        f"AI 이미지 {len(ai_images)}장 + "
+                        f"영상 {len(video_sources)}개 수집"
+                    ),
                     "timestamp": datetime.now().isoformat(),
                 })
             except Exception as me:
+                import traceback
+                print(f"[V2] Step 4 미디어 크롤링 에러: {me}")
+                print(traceback.format_exc())
                 job["events"].put({
                     "type": "v2_step", "step": 4, "name": "media_crawl",
                     "status": "error", "detail": str(me),
@@ -1160,7 +1208,8 @@ def v2_confirm_execute(job_id):
                 job["results"]["step7_debug"] = _dbg.strip()
                 if laundered_videos and job.get("shorts_script"):
                     from affiliate_system.video_launderer import (
-                        EmotionTTSEngine, SubtitleGenerator, ShortsRenderer
+                        EmotionTTSEngine, SubtitleGenerator, ShortsRenderer,
+                        ProShortsRenderer, _detect_bgm_genre,
                     )
                     from affiliate_system.config import V2_TTS_DIR, V2_SUBTITLE_DIR, V2_SHORTS_DIR
 
@@ -1208,15 +1257,28 @@ def v2_confirm_execute(job_id):
                             "emotion": sc.get("emotion", "friendly"),
                         })
 
-                    # 최종 렌더링 — ShortsRenderer.render_final_shorts 시그니처에 맞춤
-                    _dbg_log.write_text(f"렌더링 시작: {len(render_scenes)}장면\n", encoding="utf-8")
-                    renderer = ShortsRenderer()
-                    result_path = renderer.render_final_shorts(
-                        scenes=render_scenes,
-                        campaign_id=job_id,
-                        subtitle_path=subtitle_path,
-                        coupang_link=affiliate_link,
-                    )
+                    # 최종 렌더링 — ProShortsRenderer V3 (모션+전환+BGM+컬러그레이딩)
+                    _dbg_log.write_text(f"ProShortsRenderer 시작: {len(render_scenes)}장면\n", encoding="utf-8")
+                    product_name = job.get("product_name", topic)
+                    category = job.get("category", "")
+                    try:
+                        renderer = ProShortsRenderer()
+                        result_path = renderer.render_pro_shorts(
+                            scenes=render_scenes,
+                            campaign_id=job_id,
+                            subtitle_path=subtitle_path,
+                            product_name=product_name,
+                            category=category,
+                        )
+                    except Exception as pro_err:
+                        _dbg_log.write_text(f"ProShortsRenderer 실패, 폴백: {pro_err}\n", encoding="utf-8")
+                        renderer = ShortsRenderer()
+                        result_path = renderer.render_final_shorts(
+                            scenes=render_scenes,
+                            campaign_id=job_id,
+                            subtitle_path=subtitle_path,
+                            coupang_link=affiliate_link,
+                        )
                     _dbg_log.write_text(f"렌더링 결과: {result_path}\n", encoding="utf-8")
                     if result_path:
                         shorts_path = result_path
@@ -1267,23 +1329,83 @@ def v2_confirm_execute(job_id):
                     "timestamp": datetime.now().isoformat(),
                 })
 
-            # Step 9: 업로드 준비
+            # Step 9: 플랫폼별 자동 업로드 (ON/OFF 스위치 기반)
+            upload_youtube = job.get("upload_youtube", False)
+            upload_instagram = job.get("upload_instagram", False)
+            upload_naver = job.get("upload_naver", False)
+            any_upload = upload_youtube or upload_instagram or upload_naver
+
             job["events"].put({
                 "type": "v2_step", "step": 9, "name": "upload_ready",
-                "status": "running", "detail": "업로드 파일 준비 중...",
+                "status": "running",
+                "detail": f"업로드: YT={'ON' if upload_youtube else 'OFF'} | IG={'ON' if upload_instagram else 'OFF'} | Blog={'ON' if upload_naver else 'OFF'}",
                 "timestamp": datetime.now().isoformat(),
             })
             upload_results = {}
             try:
-                job["results"]["blog_html"] = blog_html  # 전체 HTML 저장 (truncation 금지)
+                job["results"]["blog_html"] = blog_html
                 job["results"]["blog_images"] = blog_images
                 job["results"]["shorts_path"] = shorts_path
                 job["results"]["laundered_videos"] = laundered_videos
 
+                # 플랫폼별 자동 업로드 실행
+                if any_upload:
+                    try:
+                        from affiliate_system.auto_uploader import StealthUploader
+                        uploader = StealthUploader()
+                        uploaded = []
+
+                        if upload_youtube and shorts_path:
+                            try:
+                                if uploader.youtube_auth():
+                                    yt_result = uploader.youtube_upload_v2(
+                                        video_path=shorts_path,
+                                        title=f"{product_title} 추천 #Shorts",
+                                        description=f"#{product_title} #쿠팡 #추천 #쇼츠",
+                                    )
+                                    if yt_result:
+                                        uploaded.append("YouTube")
+                                        upload_results["youtube"] = yt_result
+                            except Exception as yt_err:
+                                upload_results["youtube_error"] = str(yt_err)
+
+                        if upload_instagram and shorts_path:
+                            try:
+                                if uploader.instagram_auth():
+                                    ig_result = uploader.instagram_upload_reel_v2(
+                                        video_path=shorts_path,
+                                        caption=f"{product_title} 솔직 추천! 💯\n#쿠팡 #{product_title.replace(' ', '')} #추천",
+                                    )
+                                    if ig_result:
+                                        uploaded.append("Instagram")
+                                        upload_results["instagram"] = ig_result
+                            except Exception as ig_err:
+                                upload_results["instagram_error"] = str(ig_err)
+
+                        if upload_naver and blog_html:
+                            try:
+                                naver_result = uploader.naver_blog_post_v2(
+                                    html_content=blog_html,
+                                    title=product_title,
+                                )
+                                if naver_result:
+                                    uploaded.append("Naver")
+                                    upload_results["naver"] = naver_result
+                            except Exception as nv_err:
+                                upload_results["naver_error"] = str(nv_err)
+
+                        upload_detail = f"업로드 완료: {', '.join(uploaded)}" if uploaded else "업로드 대상 없음"
+                    except Exception as up_err:
+                        upload_detail = f"업로더 로드 실패: {up_err}"
+                else:
+                    upload_detail = "자동 업로드 OFF — 결과물 확인 후 수동 업로드"
+
+                job["results"]["upload_results"] = upload_results
+
                 job["events"].put({
                     "type": "v2_step", "step": 9, "name": "upload_ready",
                     "status": "complete",
-                    "detail": "업로드 준비 완료 (수동 모드 — 결과물 확인 후 업로드)",
+                    "detail": upload_detail,
                     "timestamp": datetime.now().isoformat(),
                 })
             except Exception as ue:
