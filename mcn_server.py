@@ -8,6 +8,7 @@ SSE로 파이프라인 진행상황 실시간 스트리밍.
 실행: python yj-partners-mcn/mcn_server.py
 """
 import json
+import os
 import sys
 import time
 import uuid
@@ -859,6 +860,35 @@ def v2_submit_link(job_id):
     affiliate_link = data.get("affiliate_link", "").strip()   # 단축 URL (수익 링크)
     banner_tag = data.get("banner_tag", "").strip()           # 쿠팡 배너 코드 (<a><img> 또는 iframe)
     product_name = data.get("product_name", "").strip()
+
+    # 디버그 로그 파일 기록
+    from pathlib import Path as _Path
+    _dbg = _Path(__file__).parent.parent / "affiliate_system" / "workspace" / "v2_debug.log"
+    with open(_dbg, "w", encoding="utf-8") as _f:
+        _f.write(f"[SUBMIT] coupang_link={coupang_link[:80]}\n")
+        _f.write(f"[SUBMIT] affiliate_link={affiliate_link}\n")
+        _f.write(f"[SUBMIT] banner_tag_len={len(banner_tag)}\n")
+        _f.write(f"[SUBMIT] banner_tag={banner_tag[:200]}\n")
+        _f.write(f"[SUBMIT] product_name_input={product_name}\n")
+
+    # 배너코드 alt 속성에서 상품명 자동 추출 (사용자가 상품명 미입력 시)
+    if not product_name and banner_tag:
+        import re as _re
+        _alt_match = _re.search(r'alt=["\']([^"\']+)["\']', banner_tag)
+        if _alt_match:
+            product_name = _alt_match.group(1).strip()
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(f"[ALT_EXTRACT] product_name={product_name}\n")
+        else:
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(f"[ALT_EXTRACT] NO MATCH in banner_tag\n")
+    elif product_name:
+        with open(_dbg, "a", encoding="utf-8") as _f:
+            _f.write(f"[ALT_EXTRACT] SKIPPED - product_name already set: {product_name}\n")
+    else:
+        with open(_dbg, "a", encoding="utf-8") as _f:
+            _f.write(f"[ALT_EXTRACT] SKIPPED - no banner_tag\n")
+
     if not coupang_link:
         return jsonify({"error": "상품정보 링크 필수"}), 400
     if not affiliate_link:
@@ -898,15 +928,41 @@ def v2_submit_link(job_id):
             pipeline = ContentPipeline()
             product = pipeline._prepare_product(coupang_link)
 
-            # 쿠팡 스크래핑 실패 시 사용자 입력 상품명 사용
-            if product_name and (not product.title or product.title in ("쿠팡 상품", "인기상품")):
-                print(f"[V2] 스크래핑 폴백 → 사용자 상품명 사용: {product_name}")
+            # 디버그 로그 — 스크래핑 결과 + 폴백 판단
+            _dbg = _Path(__file__).parent.parent / "affiliate_system" / "workspace" / "v2_debug.log"
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(f"[SCRAPE] product.title={product.title}\n")
+                _f.write(f"[SCRAPE] product.description={str(product.description)[:100]}\n")
+                _f.write(f"[SCRAPE] product_name_var={product_name}\n")
+
+            # 쿠팡 스크래핑 실패 시 배너코드 alt → 사용자 입력 상품명 순으로 폴백
+            _bad_titles = ("쿠팡 상품", "인기상품", "", None)
+            if not product.title or product.title in _bad_titles:
+                # 1차 폴백: 사용자 입력 또는 배너코드 alt에서 추출된 상품명
+                if product_name:
+                    with open(_dbg, "a", encoding="utf-8") as _f:
+                        _f.write(f"[FALLBACK] Using product_name: {product_name}\n")
+                    product = Product(
+                        title=product_name,
+                        description=f"{product_name} - 쿠팡 최저가 상품",
+                        url=coupang_link,
+                        affiliate_link=affiliate_link,
+                        scraped_at=product.scraped_at,
+                    )
+                else:
+                    with open(_dbg, "a", encoding="utf-8") as _f:
+                        _f.write(f"[FALLBACK] WARNING: No product_name, using default\n")
+            elif product_name and product.title != product_name:
+                # 스크래핑 성공했지만 배너 alt와 다른 경우 → 배너 alt 우선 (더 정확)
+                print(f"[V2] 배너코드 상품명으로 교체: {product.title} → {product_name}")
                 product = Product(
                     title=product_name,
-                    description=f"{product_name} - 쿠팡 최저가 상품",
+                    description=product.description or f"{product_name} - 쿠팡 최저가",
                     url=coupang_link,
-                    affiliate_link=affiliate_link,  # 수익 링크
+                    affiliate_link=affiliate_link,
                     scraped_at=product.scraped_at,
+                    price=getattr(product, 'price', ''),
+                    images=getattr(product, 'images', []),
                 )
 
             # 항상 수익 링크를 파트너스 링크로 설정
@@ -939,6 +995,10 @@ def v2_submit_link(job_id):
             try:
                 from affiliate_system.ai_generator import AIGenerator
                 generator = AIGenerator()
+                # 디버그: AI 생성 직전 최종 product.title 확인
+                with open(_dbg, "a", encoding="utf-8") as _f:
+                    _f.write(f"[AI_GEN] FINAL product.title={product.title}\n")
+                    _f.write(f"[AI_GEN] FINAL product.description={str(product.description)[:100]}\n")
 
                 # V2 블로그 콘텐츠 — 수익 링크로 생성
                 blog_content = generator.generate_blog_content_v2(product, affiliate_link)
@@ -1182,9 +1242,45 @@ def v2_confirm_execute(job_id):
                         "timestamp": datetime.now().isoformat(),
                     })
                 else:
+                    # 비디오 소스 없음 → 블로그 이미지를 영상 클립으로 변환 (Ken Burns)
+                    if blog_images:
+                        import subprocess
+                        from affiliate_system.config import V2_SHORTS_DIR, FFMPEG_CRF
+                        _img_vid_dir = _Path(V2_SHORTS_DIR) / "img_clips"
+                        _img_vid_dir.mkdir(parents=True, exist_ok=True)
+
+                        for img_i, img_path in enumerate(blog_images[:6]):
+                            try:
+                                out_clip = str(_img_vid_dir / f"img_clip_{img_i}_{job_id[:8]}.mp4")
+                                # FFmpeg: 이미지 → 8초 영상 (zoompan Ken Burns 효과)
+                                subprocess.run([
+                                    "ffmpeg", "-y",
+                                    "-loop", "1", "-i", str(img_path),
+                                    "-vf", (
+                                        "scale=1080:1920:force_original_aspect_ratio=increase,"
+                                        "crop=1080:1920,"
+                                        "zoompan=z='min(zoom+0.0015,1.3)':d=240:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30"
+                                    ),
+                                    "-t", "8",
+                                    "-c:v", "libx264",
+                                    "-crf", FFMPEG_CRF,
+                                    "-preset", "medium",
+                                    "-pix_fmt", "yuv420p",
+                                    "-an",  # 오디오 없음
+                                    out_clip,
+                                ], capture_output=True, timeout=60)
+
+                                if os.path.exists(out_clip) and os.path.getsize(out_clip) > 10000:
+                                    laundered_videos.append(out_clip)
+                            except Exception as _img_err:
+                                print(f"[V2] 이미지→영상 변환 실패 [{img_i}]: {_img_err}")
+
+                        print(f"[V2] 이미지→영상 폴백: {len(laundered_videos)}개 생성")
+
                     job["events"].put({
                         "type": "v2_step", "step": 6, "name": "video_launder",
-                        "status": "complete", "detail": "영상 없음 (플레이스홀더)",
+                        "status": "complete",
+                        "detail": f"이미지→영상 폴백: {len(laundered_videos)}개 클립 생성" if laundered_videos else "영상/이미지 없음",
                         "timestamp": datetime.now().isoformat(),
                     })
             except Exception as le:
