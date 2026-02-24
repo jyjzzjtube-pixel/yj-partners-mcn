@@ -855,11 +855,19 @@ def v2_submit_link(job_id):
         return jsonify({"error": f"현재 상태: {job['state']}, 링크 입력 불가"}), 400
 
     data = request.json or {}
-    coupang_link = data.get("coupang_link", "").strip()
+    coupang_link = data.get("coupang_link", "").strip()       # 상품정보 URL (스크래핑용)
+    affiliate_link = data.get("affiliate_link", "").strip()   # 단축 URL (수익 링크)
+    iframe_tag = data.get("iframe_tag", "").strip()           # iframe 태그 (블로그 위젯)
+    product_name = data.get("product_name", "").strip()
     if not coupang_link:
-        return jsonify({"error": "coupang_link 필수"}), 400
+        return jsonify({"error": "상품정보 링크 필수"}), 400
+    if not affiliate_link:
+        return jsonify({"error": "단축 URL 필수"}), 400
 
     job["coupang_link"] = coupang_link
+    job["affiliate_link"] = affiliate_link
+    job["iframe_tag"] = iframe_tag
+    job["product_name"] = product_name
     job["state"] = V2PipelineState.ANALYZING
     job["events"].put({
         "type": "state_change",
@@ -886,15 +894,31 @@ def v2_submit_link(job_id):
             })
 
             from affiliate_system.pipeline import ContentPipeline
+            from affiliate_system.models import Product
             pipeline = ContentPipeline()
             product = pipeline._prepare_product(coupang_link)
+
+            # 쿠팡 스크래핑 실패 시 사용자 입력 상품명 사용
+            if product_name and (not product.title or product.title in ("쿠팡 상품", "인기상품")):
+                print(f"[V2] 스크래핑 폴백 → 사용자 상품명 사용: {product_name}")
+                product = Product(
+                    title=product_name,
+                    description=f"{product_name} - 쿠팡 최저가 상품",
+                    url=coupang_link,
+                    affiliate_link=affiliate_link,  # 수익 링크
+                    scraped_at=product.scraped_at,
+                )
+
+            # 항상 수익 링크를 파트너스 링크로 설정
+            product.affiliate_link = affiliate_link
 
             product_info = {
                 "title": product.title,
                 "description": product.description or "",
                 "price": product.price or "",
                 "image_urls": product.image_urls[:3] if product.image_urls else [],
-                "affiliate_link": coupang_link,
+                "affiliate_link": affiliate_link,  # 수익 링크 (link.coupang.com/a/...)
+                "product_url": coupang_link,        # 상품정보 링크 (coupang.com/vp/products/...)
             }
             job["product_info"] = product_info
 
@@ -916,8 +940,8 @@ def v2_submit_link(job_id):
                 from affiliate_system.ai_generator import AIGenerator
                 generator = AIGenerator()
 
-                # V2 블로그 콘텐츠
-                blog_content = generator.generate_blog_content_v2(product, coupang_link)
+                # V2 블로그 콘텐츠 — 수익 링크로 생성
+                blog_content = generator.generate_blog_content_v2(product, affiliate_link)
                 job["draft"] = {
                     "blog": blog_content,
                     "product": product_info,
@@ -926,7 +950,7 @@ def v2_submit_link(job_id):
                 # V2 숏폼 후킹 대본
                 try:
                     shorts_script = generator.generate_shorts_hooking_script(
-                        product, persona="", coupang_link=coupang_link, dm_keyword="링크"
+                        product, persona="", coupang_link=affiliate_link, dm_keyword="링크"
                     )
                     job["shorts_script"] = shorts_script
                     job["draft"]["shorts"] = shorts_script

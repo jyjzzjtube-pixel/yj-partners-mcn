@@ -213,10 +213,28 @@ input,textarea,select{font-family:inherit}
         🛒 Coupang Profit Maximizer V2
         <span class="v2-state-badge awaiting" id="v2-state-badge">링크 입력 대기</span>
       </div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">쿠팡 파트너스 링크를 입력하면 → 상품 분석 → AI 콘텐츠 생성 → 미디어 크롤링 → 영상 세탁 → 숏폼 렌더링 → 업로드까지 자동 실행됩니다.</p>
-      <div class="v2-link-input" id="v2-link-section">
-        <input type="text" id="v2-link-input" placeholder="쿠팡 파트너스 어필리에이트 링크 입력..." />
-        <button class="btn btn-primary" id="v2-btn-submit" onclick="v2SubmitLink()">🔍 분석 시작</button>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">상품정보 링크로 상품 분석 → AI 콘텐츠 생성 → 수익 링크 자동 삽입 → 3개 플랫폼 콘텐츠 생성</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px" id="v2-link-section">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--accent)">📦 상품정보</span>
+          <input type="text" id="v2-product-url" placeholder="coupang.com/vp/products/... (상품 페이지 URL)" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--green)">💰 단축 URL</span>
+          <input type="text" id="v2-affiliate-url" placeholder="https://link.coupang.com/a/... (파트너스 수익 링크)" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--blue)">🖼️ iframe</span>
+          <input type="text" id="v2-iframe-tag" placeholder='<iframe src="https://coupa.ng/..." ...> (블로그 상품위젯)' style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--text3)">🏷️ 상품명</span>
+          <input type="text" id="v2-product-name" placeholder="(선택) 상품명 직접 입력 — 스크래핑 실패 시 사용" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
+          <button class="btn btn-primary" id="v2-btn-submit" onclick="v2SubmitLink()" style="padding:10px 20px;white-space:nowrap">🔍 분석 시작</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);padding:4px 0 0 108px">
+          ⚠️ "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다." — 모든 콘텐츠에 자동 삽입
+        </div>
       </div>
       <!-- 상품 분석 결과 -->
       <div id="v2-product-area" style="display:none"></div>
@@ -957,12 +975,20 @@ let v2JobId = null;
 let v2EventSource = null;
 
 async function v2SubmitLink() {
-  const link = document.getElementById('v2-link-input').value.trim();
-  if (!link) { alert('쿠팡 링크를 입력하세요'); return; }
+  const productUrl = document.getElementById('v2-product-url').value.trim();
+  const affiliateUrl = document.getElementById('v2-affiliate-url').value.trim();
+  const iframeTag = document.getElementById('v2-iframe-tag').value.trim();
+  const productName = document.getElementById('v2-product-name').value.trim();
+
+  if (!productUrl) { alert('📦 상품정보 링크를 입력하세요'); return; }
+  if (!affiliateUrl) { alert('💰 단축 URL을 입력하세요'); return; }
 
   document.getElementById('v2-btn-submit').disabled = true;
   v2UpdateState('analyzing', '상품 분석 중...');
-  addLog('[V2] 쿠팡 링크 분석 시작: ' + link.slice(0, 50) + '...', 'ok');
+  addLog(`[V2] 상품정보: ${productUrl.slice(0, 50)}...`, 'ok');
+  addLog(`[V2] 단축URL: ${affiliateUrl}`, 'ok');
+  if (iframeTag) addLog(`[V2] iframe: ${iframeTag.slice(0, 50)}...`, 'ok');
+  if (productName) addLog(`[V2] 상품명: ${productName}`, 'ok');
 
   // V2 10단계 리셋
   for (let i = 1; i <= 10; i++) v2UpdateStep(i, 'pending', '');
@@ -977,10 +1003,15 @@ async function v2SubmitLink() {
     v2JobId = startData.job_id;
     addLog('[V2] Job ID: ' + v2JobId);
 
-    // Step 2: 링크 제출
+    // Step 2: 링크 제출 (상품정보 + 수익링크 + 상품명)
     const linkResp = await fetch(API + `/api/v2/campaign/${v2JobId}/link`, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ coupang_link: link }),
+      body: JSON.stringify({
+        coupang_link: productUrl,
+        affiliate_link: affiliateUrl,
+        iframe_tag: iframeTag,
+        product_name: productName,
+      }),
     });
     const linkData = await linkResp.json();
 
