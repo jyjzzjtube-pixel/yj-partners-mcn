@@ -40,7 +40,7 @@ input,textarea,select{font-family:inherit}
 .auto-table tr[data-step].active{background:rgba(99,102,241,.08)}
 .step-num{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;background:var(--border)}
 .step-num.s1{background:#6366f1}.step-num.s2{background:#8b5cf6}.step-num.s3{background:#06b6d4}
-.step-num.s4{background:#f59e0b}.step-num.s5{background:#ef4444}.step-num.s6{background:#22c55e}
+.step-num.s4{background:#f59e0b}.step-num.s5{background:#ef4444}.step-num.s6{background:#22c55e}.step-num.s7{background:#3b82f6}
 .step-status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
 .step-status.pending{background:var(--card2);color:var(--text3)}
 .step-status.running{background:rgba(245,158,11,.15);color:var(--accent);animation:pulse 1.5s infinite}
@@ -94,8 +94,11 @@ input,textarea,select{font-family:inherit}
 .output-value.title-val{font-size:14px;font-weight:600;max-height:none}
 .tag-cloud{display:flex;flex-wrap:wrap;gap:4px}
 .tag{padding:2px 8px;border-radius:4px;font-size:11px;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
-.output-card-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+.output-card-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
 .output-empty{text-align:center;color:var(--text3);font-size:13px;padding:40px;grid-column:1/-1}
+.output-preview{width:100%;border-radius:6px;overflow:hidden;background:#000;margin-bottom:4px}
+.output-preview video{width:100%;max-height:280px;display:block}
+.output-preview img{width:100%;max-height:200px;object-fit:contain;display:block}
 
 /* 미디어 소스 패널 */
 .media-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
@@ -126,6 +129,41 @@ input,textarea,select{font-family:inherit}
 .log-line.ok{color:var(--green)}
 .log-line.err{color:var(--red)}
 .log-line.warn{color:var(--accent)}
+
+/* V2 모드 전환 */
+.mode-toggle{display:flex;background:var(--card2);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.mode-btn{flex:1;padding:10px 20px;text-align:center;font-size:13px;font-weight:700;border:none;background:none;color:var(--text3);cursor:pointer;transition:all .2s}
+.mode-btn:hover{color:var(--text)}
+.mode-btn.active{background:var(--primary);color:#fff}
+.v2-panel{display:none}
+.v2-panel.visible{display:block}
+
+/* V2 대화형 */
+.v2-chat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.v2-chat-header{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.v2-state-badge{display:inline-block;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700}
+.v2-state-badge.awaiting{background:rgba(99,102,241,.15);color:var(--primary-light)}
+.v2-state-badge.analyzing{background:rgba(245,158,11,.15);color:var(--accent);animation:pulse 1.5s infinite}
+.v2-state-badge.confirm{background:rgba(34,197,94,.15);color:var(--green)}
+.v2-state-badge.executing{background:rgba(239,68,68,.15);color:var(--red);animation:pulse 1.5s infinite}
+.v2-state-badge.complete{background:rgba(34,197,94,.15);color:var(--green)}
+.v2-link-input{display:flex;gap:10px;margin-top:12px}
+.v2-link-input input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-size:14px;outline:none}
+.v2-link-input input:focus{border-color:var(--primary)}
+.v2-product-card{background:var(--card2);border-radius:10px;padding:14px;margin-top:12px}
+.v2-product-card h3{font-size:15px;margin-bottom:6px}
+.v2-product-card p{font-size:12px;color:var(--text2)}
+
+/* V2 미리보기 그리드 */
+.v2-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:900px){.v2-preview-grid{grid-template-columns:1fr}}
+.v2-preview-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.v2-preview-header{padding:10px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.v2-preview-body{padding:14px;max-height:300px;overflow-y:auto;font-size:13px;color:var(--text2);white-space:pre-wrap;word-break:break-word}
+.v2-preview-body iframe{width:100%;height:250px;border:none;border-radius:6px}
+
+/* V2 10단계 */
+.step-num.s8{background:#ec4899}.step-num.s9{background:#14b8a6}.step-num.s10{background:#f97316}
 
 /* Footer */
 .footer{text-align:center;padding:24px;color:var(--text3);font-size:11px;border-top:1px solid var(--border);margin-top:32px}
@@ -158,6 +196,79 @@ input,textarea,select{font-family:inherit}
 </header>
 
 <main class="main">
+
+  <!-- V1/V2 모드 전환 -->
+  <div class="section" style="margin-bottom:16px">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-v1-btn" onclick="switchMode('v1')">V1 — 기존 파이프라인 (7단계)</button>
+      <button class="mode-btn" id="mode-v2-btn" onclick="switchMode('v2')">🔥 V2 — 쿠팡 수익 극대화 (10단계)</button>
+    </div>
+  </div>
+
+  <!-- ═══ V2 대화형 패널 ═══ -->
+  <div class="v2-panel" id="v2-panel">
+    <!-- V2 대화형 UI -->
+    <div class="v2-chat" id="v2-chat">
+      <div class="v2-chat-header">
+        🛒 Coupang Profit Maximizer V2
+        <span class="v2-state-badge awaiting" id="v2-state-badge">링크 입력 대기</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">쿠팡 파트너스 링크를 입력하면 → 상품 분석 → AI 콘텐츠 생성 → 미디어 크롤링 → 영상 세탁 → 숏폼 렌더링 → 업로드까지 자동 실행됩니다.</p>
+      <div class="v2-link-input" id="v2-link-section">
+        <input type="text" id="v2-link-input" placeholder="쿠팡 파트너스 어필리에이트 링크 입력..." />
+        <button class="btn btn-primary" id="v2-btn-submit" onclick="v2SubmitLink()">🔍 분석 시작</button>
+      </div>
+      <!-- 상품 분석 결과 -->
+      <div id="v2-product-area" style="display:none"></div>
+      <!-- 실행 버튼 -->
+      <div id="v2-confirm-area" style="display:none;margin-top:12px">
+        <button class="btn btn-green" id="v2-btn-confirm" onclick="v2Confirm()" style="width:100%;padding:14px;font-size:15px">🚀 V2 파이프라인 실행!</button>
+      </div>
+    </div>
+
+    <!-- V2 10단계 파이프라인 테이블 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span> V2 파이프라인 (10단계)</div>
+      <table class="auto-table" id="v2-auto-table">
+        <thead>
+          <tr>
+            <th style="width:50px">Step</th>
+            <th>프로세스</th>
+            <th>모듈</th>
+            <th style="width:100px">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-v2step="1"><td><span class="step-num s1">1</span></td><td><b>준비 리포트</b></td><td>pipeline</td><td><span class="step-status pending" id="v2-step-1">⏸ 대기</span></td></tr>
+          <tr data-v2step="2"><td><span class="step-num s2">2</span></td><td><b>쿠팡 링크 분석</b></td><td>coupang_scraper</td><td><span class="step-status pending" id="v2-step-2">⏸ 대기</span></td></tr>
+          <tr data-v2step="3"><td><span class="step-num s3">3</span></td><td><b>AI 콘텐츠 생성</b><br><small style="color:var(--text3)">블로그 + 숏폼 대본 (Gemini 무료)</small></td><td>ai_generator V2</td><td><span class="step-status pending" id="v2-step-3">⏸ 대기</span></td></tr>
+          <tr data-v2step="4"><td><span class="step-num s3">4</span></td><td><b>미디어 크롤링</b><br><small style="color:var(--text3)">블로그 이미지 + 숏폼 영상</small></td><td>OmniMediaCollector</td><td><span class="step-status pending" id="v2-step-4">⏸ 대기</span></td></tr>
+          <tr data-v2step="5"><td><span class="step-num s4">5</span></td><td><b>블로그 HTML 조립</b><br><small style="color:var(--text3)">이미지-텍스트 교차 + CTA</small></td><td>blog_html_generator</td><td><span class="step-status pending" id="v2-step-5">⏸ 대기</span></td></tr>
+          <tr data-v2step="6"><td><span class="step-num s5">6</span></td><td><b>4단계 영상 세탁</b><br><small style="color:var(--text3)">Crop→Mute→Speed→Sharpen (FFmpeg GPU)</small></td><td>video_launderer</td><td><span class="step-status pending" id="v2-step-6">⏸ 대기</span></td></tr>
+          <tr data-v2step="7"><td><span class="step-num s5">7</span></td><td><b>숏폼 렌더링</b><br><small style="color:var(--text3)">TTS + Whisper 자막 싱크</small></td><td>ShortsRenderer</td><td><span class="step-status pending" id="v2-step-7">⏸ 대기</span></td></tr>
+          <tr data-v2step="8"><td><span class="step-num s8">8</span></td><td><b>썸네일 생성</b></td><td>thumbnail_generator</td><td><span class="step-status pending" id="v2-step-8">⏸ 대기</span></td></tr>
+          <tr data-v2step="9"><td><span class="step-num s9">9</span></td><td><b>업로드 준비</b><br><small style="color:var(--text3)">쿠팡 링크 자동 배치</small></td><td>auto_uploader V2</td><td><span class="step-status pending" id="v2-step-9">⏸ 대기</span></td></tr>
+          <tr data-v2step="10"><td><span class="step-num s10">10</span></td><td><b>Drive 아카이빙</b></td><td>drive_manager</td><td><span class="step-status pending" id="v2-step-10">⏸ 대기</span></td></tr>
+        </tbody>
+      </table>
+      <div class="progress-bar"><div class="progress-bar-fill" id="v2-pipeline-progress"></div></div>
+    </div>
+
+    <!-- V2 블로그/숏폼 미리보기 -->
+    <div class="v2-preview-grid" id="v2-preview-grid" style="display:none">
+      <div class="v2-preview-panel">
+        <div class="v2-preview-header">📗 블로그 미리보기</div>
+        <div class="v2-preview-body" id="v2-blog-preview">블로그 HTML이 생성되면 여기에 표시됩니다.</div>
+      </div>
+      <div class="v2-preview-panel">
+        <div class="v2-preview-header">🎬 숏폼 대본 미리보기</div>
+        <div class="v2-preview-body" id="v2-shorts-preview">숏폼 대본이 생성되면 여기에 표시됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ V1 기존 패널 (기본 표시) ═══ -->
+  <div id="v1-panel">
 
   <!-- 자동화 목차 테이블 -->
   <div class="section">
@@ -222,6 +333,14 @@ input,textarea,select{font-family:inherit}
           <td>발행 URL (YouTube, Naver, Instagram)</td>
           <td><span class="step-status pending" id="step-6">⏸ 대기</span></td>
         </tr>
+        <tr data-step="7">
+          <td><span class="step-num s7">7</span></td>
+          <td><b>Google Drive 아카이빙</b><br><small style="color:var(--text3)">자동 폴더 생성 + 분류 업로드</small></td>
+          <td>drive_manager</td>
+          <td>영상 + 썸네일 + 이미지 + 오디오</td>
+          <td>Drive 폴더 URL (월별/캠페인별 자동 분류)</td>
+          <td><span class="step-status pending" id="step-7">⏸ 대기</span></td>
+        </tr>
       </tbody>
     </table>
     <div class="progress-bar"><div class="progress-bar-fill" id="pipeline-progress"></div></div>
@@ -263,6 +382,9 @@ input,textarea,select{font-family:inherit}
       </div>
       <div class="selector-group">
         <label><input type="checkbox" id="auto-upload"> 자동 업로드</label>
+      </div>
+      <div class="selector-group">
+        <label><input type="checkbox" id="drive-archive" checked> ☁️ Drive 아카이빙</label>
       </div>
     </div>
   </div>
@@ -319,11 +441,13 @@ input,textarea,select{font-family:inherit}
     <div class="status-grid" id="status-grid"></div>
   </div>
 
+  </div><!-- /v1-panel -->
+
 </main>
 
 <footer class="footer">
-  &copy; 2026 YJ Partners MCN. Powered by Gemini AI + Claude AI + MoviePy + Edge-TTS<br>
-  Backend: Flask API (port 5001) | Frontend: Vanilla JS + SSE
+  &copy; 2026 YJ Partners MCN. Powered by Gemini AI + Claude AI + FFmpeg GPU + Edge-TTS + Whisper<br>
+  V1: 7-Step Pipeline | V2: 10-Step Coupang Profit Maximizer | Backend: Flask (5001) | Frontend: Vanilla JS + SSE
 </footer>
 
 <script>
@@ -415,6 +539,7 @@ async function startPipeline() {
   if (!platforms.length) { alert('플랫폼을 1개 이상 선택하세요'); return; }
 
   const autoUpload = document.getElementById('auto-upload').checked;
+  const driveArchive = document.getElementById('drive-archive').checked;
 
   // UI 리셋
   resetSteps();
@@ -435,6 +560,7 @@ async function startPipeline() {
         platforms,
         persona: '',
         auto_upload: autoUpload,
+        drive_archive: driveArchive,
       }),
     });
     const data = await resp.json();
@@ -461,15 +587,23 @@ async function startPipeline() {
 function handleSSE(msg) {
   if (msg.type === 'step') {
     updateStep(msg.step, msg.status, msg.detail);
-    const progress = (msg.step / 6) * 100;
+    const totalSteps = 7;
+    const progress = Math.min((msg.step / totalSteps) * 100, 100);
     document.getElementById('pipeline-progress').style.width = progress + '%';
     addLog(`[Step ${msg.step}] ${msg.name}: ${msg.detail}`, msg.status === 'error' ? 'err' : 'ok');
   }
   if (msg.type === 'complete' || msg.type === 'done') {
     const results = msg.results;
-    if (results) renderOutputCards(results);
+    if (results) {
+      renderOutputCards(results);
+      // Drive URL 표시
+      if (results.drive_url) {
+        addLog('📁 Google Drive: ' + results.drive_url, 'ok');
+        showDriveLink(results.drive_url, results.drive_files_uploaded || 0);
+      }
+    }
     document.getElementById('pipeline-progress').style.width = '100%';
-    addLog('파이프라인 완료!', 'ok');
+    addLog('🎉 파이프라인 완료! (7단계 전체)', 'ok');
     document.getElementById('btn-start').disabled = false;
     if (eventSource) eventSource.close();
   }
@@ -478,6 +612,21 @@ function handleSSE(msg) {
     document.getElementById('btn-start').disabled = false;
     if (eventSource) eventSource.close();
   }
+}
+
+function showDriveLink(url, fileCount) {
+  const grid = document.getElementById('output-grid');
+  const driveCard = document.createElement('div');
+  driveCard.style.cssText = 'grid-column:1/-1;background:var(--card);border:1px solid var(--blue);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px';
+  driveCard.innerHTML = `
+    <span style="font-size:32px">☁️</span>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;color:var(--blue)">Google Drive 아카이빙 완료</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${fileCount}개 파일 자동 분류 업로드 (영상/썸네일/이미지/오디오)</div>
+    </div>
+    <a href="${escHtml(url)}" target="_blank" class="btn btn-sm" style="background:var(--blue);color:#fff">📂 Drive 폴더 열기</a>
+  `;
+  grid.appendChild(driveCard);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -533,7 +682,7 @@ function updateStep(step, status, detail) {
 }
 
 function resetSteps() {
-  for (let i = 1; i <= 6; i++) updateStep(i, 'pending', '');
+  for (let i = 1; i <= 7; i++) updateStep(i, 'pending', '');
   document.getElementById('pipeline-progress').style.width = '0%';
 }
 
@@ -558,10 +707,26 @@ function renderOutputCards(results) {
     const hashtags = (content.hashtags || []);
     const tagHtml = hashtags.map(t => `<span class="tag">${t}</span>`).join('');
 
-    // 비디오 상태
+    // 미디어 상태
     const hasVideo = pData.video && pData.video !== 'None' && pData.video !== '';
+    const hasThumbnail = pData.thumbnail && pData.thumbnail !== 'None' && pData.thumbnail !== '';
+    const videoUrl = hasVideo ? `/api/file/${pData.video}` : '';
+    const thumbUrl = hasThumbnail ? `/api/file/${pData.thumbnail}` : '';
+
+    // 미디어 미리보기 HTML
+    let previewHtml = '';
+    if (hasVideo) {
+      previewHtml = `<div class="output-preview"><video src="${videoUrl}" controls preload="metadata" poster="${thumbUrl}"></video></div>`;
+    } else if (hasThumbnail) {
+      previewHtml = `<div class="output-preview"><img src="${thumbUrl}" alt="썸네일"></div>`;
+    }
+
+    // 버튼들
     const videoBtn = hasVideo
-      ? `<button class="btn btn-sm btn-green" onclick="window.open('/api/file/${encodeURIComponent(pData.video)}')">📥 영상 다운로드</button>`
+      ? `<button class="btn btn-sm btn-green" onclick="window.open('${videoUrl}')">📥 영상</button>`
+      : '';
+    const thumbBtn = hasThumbnail
+      ? `<button class="btn btn-sm btn-outline" onclick="window.open('${thumbUrl}')">🖼️ 썸네일</button>`
       : '';
 
     html += `
@@ -572,6 +737,7 @@ function renderOutputCards(results) {
         <span class="platform-badge ${cfg.badge}">${cfg.badgeText}</span>
       </div>
       <div class="output-card-body">
+        ${previewHtml}
         <div class="output-field">
           <span class="output-label">제목</span>
           <div class="output-value title-val">${escHtml(content.title || '(생성 대기)')}</div>
@@ -591,6 +757,7 @@ function renderOutputCards(results) {
       </div>
       <div class="output-card-footer">
         <button class="btn btn-sm btn-outline" onclick="copyContent('${pName}')">📋 복사</button>
+        ${thumbBtn}
         ${videoBtn}
       </div>
     </div>`;
@@ -765,6 +932,204 @@ async function updateCostBadge() {
     const krw = ((data.total_usd || 0) * 1400).toFixed(0);
     document.getElementById('cost-badge').textContent = `API Cost: ₩${Number(krw).toLocaleString()}`;
   } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// V1/V2 모드 전환
+// ═══════════════════════════════════════════════════════════════
+let currentMode = 'v1';
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-v1-btn').classList.toggle('active', mode === 'v1');
+  document.getElementById('mode-v2-btn').classList.toggle('active', mode === 'v2');
+  document.getElementById('v1-panel').style.display = mode === 'v1' ? 'block' : 'none';
+  document.getElementById('v2-panel').classList.toggle('visible', mode === 'v2');
+  if (mode === 'v2') {
+    addLog('V2 모드 활성화: Coupang Profit Maximizer', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// V2 대화형 파이프라인
+// ═══════════════════════════════════════════════════════════════
+let v2JobId = null;
+let v2EventSource = null;
+
+async function v2SubmitLink() {
+  const link = document.getElementById('v2-link-input').value.trim();
+  if (!link) { alert('쿠팡 링크를 입력하세요'); return; }
+
+  document.getElementById('v2-btn-submit').disabled = true;
+  v2UpdateState('analyzing', '상품 분석 중...');
+  addLog('[V2] 쿠팡 링크 분석 시작: ' + link.slice(0, 50) + '...', 'ok');
+
+  // V2 10단계 리셋
+  for (let i = 1; i <= 10; i++) v2UpdateStep(i, 'pending', '');
+
+  try {
+    // Step 1: 캠페인 시작
+    const startResp = await fetch(API + '/api/v2/campaign/start', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({}),
+    });
+    const startData = await startResp.json();
+    v2JobId = startData.job_id;
+    addLog('[V2] Job ID: ' + v2JobId);
+
+    // Step 2: 링크 제출
+    const linkResp = await fetch(API + `/api/v2/campaign/${v2JobId}/link`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ coupang_link: link }),
+    });
+    const linkData = await linkResp.json();
+
+    // SSE 연결
+    if (v2EventSource) v2EventSource.close();
+    v2EventSource = new EventSource(API + `/api/v2/campaign/${v2JobId}/stream`);
+    v2EventSource.onmessage = (e) => v2HandleSSE(JSON.parse(e.data));
+    v2EventSource.onerror = () => {
+      addLog('[V2] SSE 연결 종료', 'warn');
+      v2EventSource.close();
+      document.getElementById('v2-btn-submit').disabled = false;
+    };
+
+  } catch(e) {
+    addLog('[V2] 오류: ' + e.message, 'err');
+    document.getElementById('v2-btn-submit').disabled = false;
+    v2UpdateState('awaiting', '링크 입력 대기');
+  }
+}
+
+function v2HandleSSE(msg) {
+  // 단계별 진행
+  if (msg.type === 'v2_step') {
+    v2UpdateStep(msg.step, msg.status, msg.detail || '');
+    const progress = Math.min((msg.step / 10) * 100, 100);
+    document.getElementById('v2-pipeline-progress').style.width = progress + '%';
+    addLog(`[V2 Step ${msg.step}] ${msg.name}: ${msg.detail || msg.status}`,
+           msg.status === 'error' ? 'err' : 'ok');
+  }
+
+  // 상태 변경
+  if (msg.type === 'state_change') {
+    const stateMap = {
+      'awaiting_link': ['awaiting', '링크 입력 대기'],
+      'analyzing': ['analyzing', '분석 중...'],
+      'awaiting_confirm': ['confirm', '초안 확인 대기'],
+      'executing': ['executing', '실행 중...'],
+      'complete': ['complete', '완료!'],
+    };
+    const [cls, label] = stateMap[msg.state] || ['awaiting', msg.state];
+    v2UpdateState(cls, label);
+
+    if (msg.message) addLog('[V2] ' + msg.message, 'ok');
+
+    // 초안 확인 대기 → 미리보기 + 실행 버튼 표시
+    if (msg.state === 'awaiting_confirm') {
+      document.getElementById('v2-confirm-area').style.display = 'block';
+      document.getElementById('v2-preview-grid').style.display = 'grid';
+
+      // 상품 정보 표시
+      if (msg.draft && msg.draft.product) {
+        const p = msg.draft.product;
+        document.getElementById('v2-product-area').style.display = 'block';
+        document.getElementById('v2-product-area').innerHTML = `
+          <div class="v2-product-card">
+            <h3>📦 ${escHtml(p.title)}</h3>
+            <p>${escHtml(p.price || '')} | ${escHtml(p.description?.slice(0, 100) || '')}</p>
+          </div>`;
+      }
+
+      // 블로그 미리보기
+      if (msg.draft && msg.draft.blog) {
+        const blog = msg.draft.blog;
+        let blogPreview = `📌 제목: ${escHtml(blog.title || '')}\n\n`;
+        blogPreview += `📝 인트로: ${escHtml(blog.intro || '')}\n\n`;
+        (blog.body_sections || []).forEach((s, i) => {
+          blogPreview += `[본문${i+1}] ${escHtml(s)}\n\n`;
+        });
+        if (blog.hashtags) blogPreview += `🏷️ ${blog.hashtags.join(' ')}`;
+        document.getElementById('v2-blog-preview').textContent = blogPreview;
+      }
+
+      // 숏폼 대본 미리보기
+      if (msg.draft && msg.draft.shorts) {
+        const shorts = msg.draft.shorts;
+        if (shorts.error) {
+          document.getElementById('v2-shorts-preview').textContent = '⚠️ 숏폼 대본 생성 실패: ' + shorts.error;
+        } else {
+          let shortsPreview = '';
+          (shorts.scenes || []).forEach(s => {
+            shortsPreview += `🎬 장면${s.scene_num}: [${s.emotion || 'friendly'}] ${s.duration || 5}초\n`;
+            shortsPreview += `   "${escHtml(s.text)}"\n\n`;
+          });
+          document.getElementById('v2-shorts-preview').textContent = shortsPreview || '(대본 없음)';
+        }
+      }
+    }
+  }
+
+  // 완료
+  if (msg.type === 'v2_complete' || msg.type === 'v2_done') {
+    v2UpdateState('complete', '완료!');
+    document.getElementById('v2-pipeline-progress').style.width = '100%';
+    addLog('🎉 V2 파이프라인 10단계 완료!', 'ok');
+    document.getElementById('v2-btn-submit').disabled = false;
+
+    // Drive URL
+    if (msg.results && msg.results.drive_url) {
+      addLog('📁 Drive URL: ' + msg.results.drive_url, 'ok');
+    }
+
+    if (v2EventSource) v2EventSource.close();
+  }
+
+  // 에러
+  if (msg.type === 'error') {
+    addLog('[V2] 오류: ' + msg.error, 'err');
+    v2UpdateState('awaiting', '오류 발생');
+    document.getElementById('v2-btn-submit').disabled = false;
+    if (v2EventSource) v2EventSource.close();
+  }
+}
+
+async function v2Confirm() {
+  if (!v2JobId) return;
+  document.getElementById('v2-btn-confirm').disabled = true;
+  v2UpdateState('executing', '실행 중...');
+  addLog('[V2] 실행 확인 — 10단계 파이프라인 시작', 'ok');
+
+  try {
+    await fetch(API + `/api/v2/campaign/${v2JobId}/confirm`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({}),
+    });
+  } catch(e) {
+    addLog('[V2] 실행 확인 오류: ' + e.message, 'err');
+    document.getElementById('v2-btn-confirm').disabled = false;
+  }
+}
+
+function v2UpdateState(cls, label) {
+  const badge = document.getElementById('v2-state-badge');
+  badge.className = 'v2-state-badge ' + cls;
+  badge.textContent = label;
+}
+
+function v2UpdateStep(step, status, detail) {
+  const el = document.getElementById('v2-step-' + step);
+  if (!el) return;
+  const icons = {pending:'⏸',running:'🔄',complete:'✅',error:'❌'};
+  const labels = {pending:'대기',running:'실행 중',complete:'완료',error:'오류'};
+  el.className = 'step-status ' + status;
+  el.textContent = (icons[status]||'') + ' ' + (labels[status]||status);
+  // 활성 행
+  document.querySelectorAll('#v2-auto-table tr[data-v2step]').forEach(tr => tr.classList.remove('active'));
+  if (status === 'running') {
+    const row = document.querySelector(`#v2-auto-table tr[data-v2step="${step}"]`);
+    if (row) row.classList.add('active');
+  }
 }
 </script>
 </body>
