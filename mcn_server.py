@@ -857,7 +857,7 @@ def v2_submit_link(job_id):
     data = request.json or {}
     coupang_link = data.get("coupang_link", "").strip()       # 상품정보 URL (스크래핑용)
     affiliate_link = data.get("affiliate_link", "").strip()   # 단축 URL (수익 링크)
-    iframe_tag = data.get("iframe_tag", "").strip()           # iframe 태그 (블로그 위젯)
+    banner_tag = data.get("banner_tag", "").strip()           # 쿠팡 배너 코드 (<a><img> 또는 iframe)
     product_name = data.get("product_name", "").strip()
     if not coupang_link:
         return jsonify({"error": "상품정보 링크 필수"}), 400
@@ -866,7 +866,7 @@ def v2_submit_link(job_id):
 
     job["coupang_link"] = coupang_link
     job["affiliate_link"] = affiliate_link
-    job["iframe_tag"] = iframe_tag
+    job["banner_tag"] = banner_tag
     job["product_name"] = product_name
     job["state"] = V2PipelineState.ANALYZING
     job["events"].put({
@@ -949,12 +949,23 @@ def v2_submit_link(job_id):
 
                 # V2 숏폼 후킹 대본
                 try:
-                    shorts_script = generator.generate_shorts_hooking_script(
+                    shorts_scenes = generator.generate_shorts_hooking_script(
                         product, persona="", coupang_link=affiliate_link, dm_keyword="링크"
                     )
+                    # list[dict] → {"scenes": [...]} 형태로 감싸기 (Step 7 호환)
+                    if isinstance(shorts_scenes, list):
+                        shorts_script = {"scenes": shorts_scenes}
+                    elif isinstance(shorts_scenes, dict) and "scenes" in shorts_scenes:
+                        shorts_script = shorts_scenes
+                    else:
+                        shorts_script = {"scenes": []}
                     job["shorts_script"] = shorts_script
                     job["draft"]["shorts"] = shorts_script
+                    print(f"[V2] 숏폼 대본: {len(shorts_script.get('scenes', []))}장면 생성 완료")
                 except Exception as se:
+                    import traceback
+                    print(f"[V2] 숏폼 대본 생성 실패: {se}")
+                    traceback.print_exc()
                     job["draft"]["shorts"] = {"error": str(se)}
 
                 job["events"].put({
@@ -1015,9 +1026,12 @@ def v2_confirm_execute(job_id):
     def execute():
         try:
             coupang_link = job["coupang_link"]
+            affiliate_link = job.get("affiliate_link", coupang_link)  # 수익 링크
+            banner_tag = job.get("banner_tag", "")  # 쿠팡 배너 코드
             draft = job.get("draft", {})
             blog_content = draft.get("blog", {})
             product_info = job.get("product_info", {})
+            product_title = product_info.get("title", "상품")
 
             # Step 4: 미디어 크롤링
             job["events"].put({
@@ -1031,16 +1045,26 @@ def v2_confirm_execute(job_id):
                 from affiliate_system.media_collector import OmniMediaCollector, MediaCollector
                 omni = OmniMediaCollector()
 
-                # 블로그 이미지 수집
-                image_keywords = blog_content.get("image_keywords", [product_info.get("title", "상품")])
-                from affiliate_system.pipeline import ContentPipeline
-                pipeline = ContentPipeline()
-                product = pipeline._prepare_product(coupang_link)
-                blog_images = omni.collect_blog_images(product, image_keywords)
+                # 블로그 이미지 수집 — product_title(str) 전달
+                image_keywords = blog_content.get("image_keywords", [product_title])
+                product_image_urls = product_info.get("image_urls", [])
+                blog_images = omni.collect_blog_images(
+                    product_title=product_title,
+                    image_keywords=image_keywords,
+                    product_image_urls=product_image_urls,
+                    count=5,
+                )
 
-                # 숏폼 영상 수집
+                # 숏폼 영상 수집 — 영어 키워드 필요
                 try:
-                    video_sources = omni.collect_video_sources(product, count=5)
+                    from affiliate_system.ai_generator import AIGenerator
+                    gen = AIGenerator()
+                    search_en = gen.translate_for_search(product_title)
+                    video_sources = omni.collect_video_sources(
+                        product_title=product_title,
+                        search_keyword_en=search_en,
+                        count=5,
+                    )
                 except Exception:
                     video_sources = []
 
@@ -1071,9 +1095,10 @@ def v2_confirm_execute(job_id):
                     title=blog_content.get("title", product_info.get("title", "")),
                     intro=blog_content.get("intro", ""),
                     body_sections=blog_content.get("body_sections", []),
-                    image_paths=blog_images,
-                    coupang_link=coupang_link,
+                    image_paths=[p for p in blog_images if p],  # 빈 경로 필터링
+                    coupang_link=affiliate_link,  # 수익 링크 사용!
                     hashtags=blog_content.get("hashtags", []),
+                    banner_tag=banner_tag,  # 쿠팡 배너 코드
                 )
                 job["blog_html"] = blog_html
                 job["events"].put({
@@ -1128,67 +1153,97 @@ def v2_confirm_execute(job_id):
                 "timestamp": datetime.now().isoformat(),
             })
             shorts_path = None
+            _dbg_log = Path(WORK_DIR) / "step7_debug.log"
             try:
+                _dbg = f"Step 7 체크: lv={len(laundered_videos) if laundered_videos else 0}, script={type(job.get('shorts_script'))}, has_script={bool(job.get('shorts_script'))}\n"
+                _dbg_log.write_text(_dbg, encoding="utf-8")
+                job["results"]["step7_debug"] = _dbg.strip()
                 if laundered_videos and job.get("shorts_script"):
                     from affiliate_system.video_launderer import (
                         EmotionTTSEngine, SubtitleGenerator, ShortsRenderer
                     )
                     from affiliate_system.config import V2_TTS_DIR, V2_SUBTITLE_DIR, V2_SHORTS_DIR
-                    from affiliate_system.models import ShortsScene, EmotionTag
 
                     script = job["shorts_script"]
-                    scenes_data = script.get("scenes", [])
+                    # list 또는 {"scenes": [...]} 둘 다 지원
+                    if isinstance(script, list):
+                        scenes_data = script
+                    elif isinstance(script, dict):
+                        scenes_data = script.get("scenes", [])
+                    else:
+                        scenes_data = []
 
-                    # ShortsScene 객체 생성
-                    scenes = []
+                    _dbg_log.write_text(f"Step7 진입: scenes={len(scenes_data)}, lv={len(laundered_videos)}\n", encoding="utf-8")
+
+                    # emotion 유효성 검증
+                    valid_emotions = {"excited", "friendly", "urgent", "dramatic", "calm", "hyped"}
                     for sd in scenes_data:
-                        emotion_str = sd.get("emotion", "friendly")
-                        try:
-                            emotion = EmotionTag(emotion_str)
-                        except ValueError:
-                            emotion = EmotionTag.FRIENDLY
-                        scenes.append(ShortsScene(
-                            scene_num=sd.get("scene_num", len(scenes) + 1),
-                            text=sd.get("text", ""),
-                            duration=sd.get("duration", 5.0),
-                            emotion=emotion,
-                        ))
+                        emo = sd.get("emotion", "friendly")
+                        if emo not in valid_emotions:
+                            sd["emotion"] = "friendly"
 
                     # TTS 생성
+                    _dbg_log.write_text(f"TTS 시작...\n", encoding="utf-8")
                     tts_engine = EmotionTTSEngine()
-                    scenes = tts_engine.generate_scenes_tts(scenes, str(V2_TTS_DIR))
+                    scenes = tts_engine.generate_scenes_tts(scenes_data, job_id)
+                    _dbg_log.write_text(f"TTS 완료: {len(scenes)}장면\n", encoding="utf-8")
 
                     # 자막 생성
                     sub_gen = SubtitleGenerator()
-                    subtitle_path = str(V2_SUBTITLE_DIR / "shorts_subtitle.ass")
-                    sub_gen.generate_ass_from_scenes(scenes, subtitle_path)
+                    subtitle_path = sub_gen.generate_ass_from_scenes(scenes, job_id)
+                    if not subtitle_path:
+                        subtitle_path = str(V2_SUBTITLE_DIR / f"{job_id}_subtitle.ass")
+                    _dbg_log.write_text(f"자막: {subtitle_path}\n", encoding="utf-8")
 
-                    # 최종 렌더링
+                    # 세탁된 영상을 scene에 매핑 (round-robin 순환)
+                    render_scenes = []
+                    for i, sc in enumerate(scenes):
+                        video_idx = i % len(laundered_videos)
+                        video_path = laundered_videos[video_idx]
+                        render_scenes.append({
+                            "video_clip_path": video_path,
+                            "tts_path": sc.get("tts_path", "") or "",
+                            "tts_duration": sc.get("tts_duration", sc.get("duration", 3.0)),
+                            "text": sc.get("text", ""),
+                            "emotion": sc.get("emotion", "friendly"),
+                        })
+
+                    # 최종 렌더링 — ShortsRenderer.render_final_shorts 시그니처에 맞춤
+                    _dbg_log.write_text(f"렌더링 시작: {len(render_scenes)}장면\n", encoding="utf-8")
                     renderer = ShortsRenderer()
-                    shorts_path = str(V2_SHORTS_DIR / "final_shorts.mp4")
-                    renderer.render_final_shorts(
-                        scenes=scenes,
-                        laundered_videos=laundered_videos,
+                    result_path = renderer.render_final_shorts(
+                        scenes=render_scenes,
+                        campaign_id=job_id,
                         subtitle_path=subtitle_path,
-                        output_path=shorts_path,
+                        coupang_link=affiliate_link,
                     )
+                    _dbg_log.write_text(f"렌더링 결과: {result_path}\n", encoding="utf-8")
+                    if result_path:
+                        shorts_path = result_path
 
                     job["events"].put({
                         "type": "v2_step", "step": 7, "name": "shorts_render",
                         "status": "complete",
-                        "detail": f"숏폼 렌더링 완료: {Path(shorts_path).name}",
+                        "detail": f"숏폼 렌더링 완료: {Path(shorts_path).name}" if shorts_path else "렌더링 실패",
                         "timestamp": datetime.now().isoformat(),
                     })
                 else:
+                    skip_reason = f"laundered={len(laundered_videos) if laundered_videos else 0}, script={bool(job.get('shorts_script'))}"
+                    job["results"]["shorts_skip"] = skip_reason
                     job["events"].put({
                         "type": "v2_step", "step": 7, "name": "shorts_render",
-                        "status": "complete", "detail": "영상 소스 부족 (플레이스홀더)",
+                        "status": "complete", "detail": f"숏폼 스킵: {skip_reason}",
                         "timestamp": datetime.now().isoformat(),
                     })
-            except Exception as re:
+            except Exception as render_err:
+                import traceback
+                err_detail = traceback.format_exc()
+                print(f"[V2] Step 7 숏폼 렌더링 에러: {render_err}")
+                print(err_detail)
+                job["results"]["shorts_error"] = f"{render_err}\n{err_detail}"
                 job["events"].put({
                     "type": "v2_step", "step": 7, "name": "shorts_render",
-                    "status": "error", "detail": str(re),
+                    "status": "error", "detail": str(render_err),
                     "timestamp": datetime.now().isoformat(),
                 })
 
@@ -1220,7 +1275,7 @@ def v2_confirm_execute(job_id):
             })
             upload_results = {}
             try:
-                job["results"]["blog_html"] = blog_html[:500] + "..." if len(blog_html) > 500 else blog_html
+                job["results"]["blog_html"] = blog_html  # 전체 HTML 저장 (truncation 금지)
                 job["results"]["blog_images"] = blog_images
                 job["results"]["shorts_path"] = shorts_path
                 job["results"]["laundered_videos"] = laundered_videos
@@ -1248,19 +1303,29 @@ def v2_confirm_execute(job_id):
                 from affiliate_system.drive_manager import DriveArchiver
                 archiver = DriveArchiver()
                 if archiver.authenticate():
-                    # V2 파일 수집
-                    drive_files = {"images": blog_images, "renders": [], "audio": [], "logs": []}
+                    # V2 파일 수집 — 빈 경로 필터링!
+                    valid_images = [p for p in blog_images if p and Path(p).exists()]
+                    drive_files = {"images": valid_images, "renders": [], "audio": [], "logs": []}
+
+                    # 블로그 HTML 파일 저장 후 Drive 업로드
+                    if blog_html:
+                        blog_html_path = Path(WORK_DIR) / f"blog_{job_id}.html"
+                        blog_html_path.write_text(blog_html, encoding="utf-8")
+                        drive_files["logs"].append(str(blog_html_path))
                     if shorts_path and Path(shorts_path).exists():
                         drive_files["renders"].append(shorts_path)
                     for lv in laundered_videos:
-                        if Path(lv).exists():
+                        if lv and Path(lv).exists():
                             drive_files["renders"].append(lv)
 
-                    # 임시 Campaign 객체 생성
-                    from affiliate_system.models import Campaign, AIContent, CampaignStatus
-                    from affiliate_system.pipeline import ContentPipeline
-                    temp_pipeline = ContentPipeline()
-                    temp_product = temp_pipeline._prepare_product(coupang_link)
+                    # 임시 Campaign 객체 생성 — 재스크래핑 않고 저장된 정보 사용
+                    from affiliate_system.models import Campaign, AIContent, CampaignStatus, Product
+                    temp_product = Product(
+                        title=product_title,
+                        description=product_info.get("description", ""),
+                        url=coupang_link,
+                        affiliate_link=affiliate_link,
+                    )
                     temp_campaign = Campaign(
                         id=job_id, product=temp_product,
                         ai_content=AIContent(platform_contents={}),
@@ -1340,7 +1405,7 @@ def v2_campaign_status(job_id):
         "coupang_link": job.get("coupang_link"),
         "product_info": job.get("product_info"),
         "draft": job.get("draft"),
-        "blog_html": (job.get("blog_html", "") or "")[:500],
+        "blog_html": job.get("blog_html", ""),
         "results": _safe_serialize(job.get("results", {})),
         "error": job.get("error"),
         "created_at": job.get("created_at"),

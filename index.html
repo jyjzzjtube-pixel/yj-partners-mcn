@@ -224,8 +224,8 @@ input,textarea,select{font-family:inherit}
           <input type="text" id="v2-affiliate-url" placeholder="https://link.coupang.com/a/... (파트너스 수익 링크)" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--blue)">🖼️ iframe</span>
-          <input type="text" id="v2-iframe-tag" placeholder='<iframe src="https://coupa.ng/..." ...> (블로그 상품위젯)' style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
+          <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--blue)">🏷️ 배너코드</span>
+          <input type="text" id="v2-banner-tag" placeholder='<a href="https://link.coupang.com/..."><img src="..."> (쿠팡 배너 이미지 태그)' style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" />
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="min-width:100px;font-size:12px;font-weight:700;color:var(--text3)">🏷️ 상품명</span>
@@ -977,7 +977,7 @@ let v2EventSource = null;
 async function v2SubmitLink() {
   const productUrl = document.getElementById('v2-product-url').value.trim();
   const affiliateUrl = document.getElementById('v2-affiliate-url').value.trim();
-  const iframeTag = document.getElementById('v2-iframe-tag').value.trim();
+  const bannerTag = document.getElementById('v2-banner-tag').value.trim();
   const productName = document.getElementById('v2-product-name').value.trim();
 
   if (!productUrl) { alert('📦 상품정보 링크를 입력하세요'); return; }
@@ -987,7 +987,7 @@ async function v2SubmitLink() {
   v2UpdateState('analyzing', '상품 분석 중...');
   addLog(`[V2] 상품정보: ${productUrl.slice(0, 50)}...`, 'ok');
   addLog(`[V2] 단축URL: ${affiliateUrl}`, 'ok');
-  if (iframeTag) addLog(`[V2] iframe: ${iframeTag.slice(0, 50)}...`, 'ok');
+  if (bannerTag) addLog(`[V2] 배너: ${bannerTag.slice(0, 60)}...`, 'ok');
   if (productName) addLog(`[V2] 상품명: ${productName}`, 'ok');
 
   // V2 10단계 리셋
@@ -1009,7 +1009,7 @@ async function v2SubmitLink() {
       body: JSON.stringify({
         coupang_link: productUrl,
         affiliate_link: affiliateUrl,
-        iframe_tag: iframeTag,
+        banner_tag: bannerTag,
         product_name: productName,
       }),
     });
