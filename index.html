@@ -90,7 +90,8 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 .draft-body iframe{width:100%;height:260px;border:none;border-radius:6px}
 
 /* ── 파이프라인 테이블 ── */
-.pipe-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.pipe-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pipe-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:600px}
 .pipe-table th{background:var(--card2);text-align:left;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border);letter-spacing:.6px}
 .pipe-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
 .pipe-table tr:last-child td{border-bottom:none}
@@ -126,7 +127,8 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 
 /* ── 3플랫폼 결과 ── */
 .result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-@media(max-width:1000px){.result-grid{grid-template-columns:1fr}}
+@media(max-width:1000px){.result-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.result-grid{grid-template-columns:1fr}}
 .result-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .result-card-header{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
 .result-card-header .plat-icon{font-size:18px}
@@ -148,7 +150,7 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 .tag{padding:2px 7px;border-radius:4px;font-size:10px;background:var(--card2);color:var(--text2);border:1px solid var(--border)}
 
 /* ── 로그 패널 ── */
-.log-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;max-height:180px;overflow-y:auto;font-family:'Cascadia Code','Fira Code',monospace;font-size:11px;color:var(--text2)}
+.log-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;max-height:180px;overflow-y:auto;font-family:'Cascadia Code','Fira Code',monospace;font-size:11px;color:var(--text2);word-break:break-all}
 .log-line{margin-bottom:2px;opacity:.85}
 .log-line .time{color:var(--text3)}
 .log-line.ok{color:var(--green)}.log-line.err{color:var(--red)}.log-line.warn{color:var(--accent)}
@@ -176,6 +178,10 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 .collapse-btn:hover{color:var(--text)}
 .collapsible{overflow:hidden;transition:max-height .3s ease}
 .collapsible.collapsed{max-height:0 !important}
+
+/* ── 접근성: 포커스 가시성 ── */
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--primary-light);outline-offset:2px}
+.toggle-switch input:focus-visible+.toggle-slider{outline:2px solid var(--primary-light);outline-offset:2px}
 
 /* ── 반응형 ── */
 @media(max-width:768px){
@@ -249,16 +255,16 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
         </select>
       </div>
       <label class="toggle-switch" title="Step 2 후 초안 확인 후 진행">
-        <input type="checkbox" id="chk-review" checked>
+        <input type="checkbox" id="chk-review" checked aria-label="검토 모드 토글">
         <span class="toggle-slider"></span>
         <span class="toggle-label">📋 검토 모드</span>
       </label>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-left:auto">
         <span style="font-size:11px;font-weight:600;color:var(--text3)">업로드:</span>
-        <label class="toggle-switch"><input type="checkbox" id="up-yt"><span class="toggle-slider"></span><span class="toggle-label">📺 YT</span></label>
-        <label class="toggle-switch"><input type="checkbox" id="up-ig"><span class="toggle-slider"></span><span class="toggle-label">📸 IG</span></label>
-        <label class="toggle-switch"><input type="checkbox" id="up-nv"><span class="toggle-slider"></span><span class="toggle-label">📝 NV</span></label>
-        <label class="toggle-switch"><input type="checkbox" id="up-drive" checked><span class="toggle-slider"></span><span class="toggle-label">☁️ Drive</span></label>
+        <label class="toggle-switch"><input type="checkbox" id="up-yt" aria-label="YouTube 업로드 토글"><span class="toggle-slider"></span><span class="toggle-label">📺 YT</span></label>
+        <label class="toggle-switch"><input type="checkbox" id="up-ig" aria-label="Instagram 업로드 토글"><span class="toggle-slider"></span><span class="toggle-label">📸 IG</span></label>
+        <label class="toggle-switch"><input type="checkbox" id="up-nv" aria-label="네이버 블로그 업로드 토글"><span class="toggle-slider"></span><span class="toggle-label">📝 NV</span></label>
+        <label class="toggle-switch"><input type="checkbox" id="up-drive" checked aria-label="Google Drive 아카이빙 토글"><span class="toggle-slider"></span><span class="toggle-label">☁️ Drive</span></label>
       </div>
     </div>
 
@@ -286,6 +292,7 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
   <!-- ═══ 8단계 파이프라인 (카테고리별 컬러) ═══ -->
   <div class="section">
     <div class="section-title"><span class="icon">📋</span> V3 파이프라인 — 8단계</div>
+    <div class="pipe-table-wrap">
     <table class="pipe-table" id="pipe-table">
       <thead>
         <tr>
@@ -355,6 +362,7 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
         </tr>
       </tbody>
     </table>
+    </div>
     <div class="progress-bar"><div class="progress-fill" id="pipe-progress"></div></div>
   </div>
 
@@ -419,6 +427,13 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 
 <script>
 // ═══════════════════════════════════════════════════════════════
+// GitHub Pages 접속 시 → localhost:5001 자동 리다이렉트
+// ═══════════════════════════════════════════════════════════════
+if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  window.location.replace('http://localhost:5001');
+}
+
+// ═══════════════════════════════════════════════════════════════
 // V3 상태 관리
 // ═══════════════════════════════════════════════════════════════
 const API = '';
@@ -451,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkHealth() {
   try {
     const r = await fetch(API + '/api/health');
+    if (!r.ok) throw new Error('Server error');
     const d = await r.json();
     const el = document.getElementById('status-badge');
     el.textContent = 'ONLINE ' + new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
@@ -485,7 +501,7 @@ async function updateCost() {
     const d = await r.json();
     const krw = ((d.total_usd||0)*1400).toFixed(0);
     document.getElementById('cost-badge').textContent = `API ₩${Number(krw).toLocaleString()}`;
-  } catch(e) {}
+  } catch(e) { console.warn('Cost update failed:', e); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -496,6 +512,7 @@ async function v3Start() {
   if (!coupangUrl) { alert('📦 쿠팡 상품 URL을 입력하세요'); return; }
 
   const affiliateLink = document.getElementById('inp-affiliate').value.trim();
+  if (!affiliateLink) { alert('💰 제휴 링크를 입력하세요 (link.coupang.com/a/...)'); return; }
   const bannerTag = document.getElementById('inp-banner').value.trim();
   const productName = document.getElementById('inp-product-name').value.trim();
   const socialUrls = document.getElementById('inp-social-urls').value.trim();
@@ -529,7 +546,7 @@ async function v3Start() {
         affiliate_link: affiliateLink,
         banner_tag: bannerTag,
         product_name: productName,
-        social_urls: socialUrls,
+        social_urls: socialUrls ? socialUrls.split('\n').map(u=>u.trim()).filter(u=>u) : [],
         ai_provider: aiProvider,
         review_mode: reviewMode,
         upload_flags: uploadFlags,
@@ -544,7 +561,7 @@ async function v3Start() {
     // SSE 연결
     if (v3ES) v3ES.close();
     v3ES = new EventSource(API + '/api/v3/campaign/stream/' + v3JobId);
-    v3ES.onmessage = (e) => v3HandleSSE(JSON.parse(e.data));
+    v3ES.onmessage = (e) => { try { v3HandleSSE(JSON.parse(e.data)); } catch(err) { console.warn('SSE parse error:', err); } };
     v3ES.onerror = () => {
       addLog('SSE 연결 종료', 'warn');
       v3ES.close();
@@ -645,7 +662,7 @@ async function v3Confirm() {
     // SSE 재연결 — 확인 후 Step 3~8 이벤트 수신
     if (v3ES) v3ES.close();
     v3ES = new EventSource(API + '/api/v3/campaign/stream/' + v3JobId);
-    v3ES.onmessage = (e) => v3HandleSSE(JSON.parse(e.data));
+    v3ES.onmessage = (e) => { try { v3HandleSSE(JSON.parse(e.data)); } catch(err) { console.warn('SSE parse error:', err); } };
     v3ES.onerror = () => {
       addLog('SSE 연결 종료', 'warn');
       v3ES.close();
@@ -661,11 +678,26 @@ async function v3Confirm() {
 // ═══════════════════════════════════════════════════════════════
 // 파이프라인 단계 UI
 // ═══════════════════════════════════════════════════════════════
-function updateStep(step, status) {
+function updateStep(step, status, detail) {
   const el = document.getElementById('v3s-' + step);
   if (!el) return;
   el.className = 'step-status ' + status;
   el.textContent = (STEP_ICONS[status]||'') + ' ' + (STEP_LABELS[status]||status);
+  // 상세 정보 표시 (해당 행의 모듈 셀 옆에 추가)
+  if (detail) {
+    const row = document.querySelector(`#pipe-table tr[data-step="${step}"]`);
+    if (row) {
+      let detailEl = row.querySelector('.step-detail');
+      if (!detailEl) {
+        detailEl = document.createElement('div');
+        detailEl.className = 'step-detail';
+        detailEl.style.cssText = 'font-size:10px;color:var(--text3);margin-top:2px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        el.parentElement.appendChild(detailEl);
+      }
+      detailEl.textContent = detail;
+      detailEl.title = detail;
+    }
+  }
   // 활성 행 하이라이트
   document.querySelectorAll('#pipe-table tr[data-step]').forEach(tr => tr.classList.remove('active'));
   if (status === 'running') {
@@ -905,6 +937,15 @@ async function reuse(id) {
       document.getElementById('inp-coupang-url').value = d.topic;
       addLog('캠페인 재사용: ' + d.topic, 'ok');
     }
+    // 결과에서 추가 필드 복원
+    if (d.results) {
+      try {
+        const res = typeof d.results === 'string' ? JSON.parse(d.results) : d.results;
+        if (res.affiliate_link) document.getElementById('inp-affiliate').value = res.affiliate_link;
+        if (res.banner_tag) document.getElementById('inp-banner').value = res.banner_tag;
+        if (res.product_name) document.getElementById('inp-product-name').value = res.product_name;
+      } catch(_) {}
+    }
   } catch(e) { addLog('재사용 실패: ' + e.message, 'err'); }
 }
 
@@ -915,7 +956,7 @@ function addLog(msg, type) {
   const panel = document.getElementById('log-panel');
   const time = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const cls = type==='ok'?'ok':type==='err'?'err':type==='warn'?'warn':'';
-  panel.innerHTML += `<div class="log-line ${cls}"><span class="time">[${time}]</span> ${esc(msg)}</div>`;
+  panel.insertAdjacentHTML('beforeend', `<div class="log-line ${cls}"><span class="time">[${time}]</span> ${esc(msg)}</div>`);
   panel.scrollTop = panel.scrollHeight;
 }
 function clearLog() { document.getElementById('log-panel').innerHTML = ''; }
