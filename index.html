@@ -183,12 +183,24 @@ textarea.field-input{resize:vertical;min-height:60px;line-height:1.5}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--primary-light);outline-offset:2px}
 .toggle-switch input:focus-visible+.toggle-slider{outline:2px solid var(--primary-light);outline-offset:2px}
 
+/* ── 데이터 관리 바 ── */
+.data-mgmt-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.data-mgmt-bar .mgmt-label{font-size:11px;font-weight:700;color:var(--text3);margin-right:4px}
+.btn-mgmt{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+.btn-mgmt:hover{opacity:.85;transform:translateY(-1px)}
+.btn-mgmt:active{transform:translateY(0)}
+.btn-backup{background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+.btn-restore{background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+.btn-reset{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.btn-reset:hover{background:rgba(239,68,68,.25)}
+
 /* ── 반응형 ── */
 @media(max-width:768px){
   .result-grid{grid-template-columns:1fr}
   .settings-row{flex-direction:column;align-items:flex-start}
   .field-row{flex-direction:column;align-items:flex-start}
   .field-label{min-width:unset}
+  .data-mgmt-bar{justify-content:center}
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -418,6 +430,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     <div class="status-grid" id="status-grid"></div>
   </div>
 
+  <!-- ═══ 데이터 관리 ═══ -->
+  <div class="data-mgmt-bar">
+    <span class="mgmt-label">데이터 관리</span>
+    <button class="btn-mgmt btn-backup" onclick="exportBackup()">💾 백업</button>
+    <button class="btn-mgmt btn-restore" onclick="document.getElementById('import-file').click()">📂 복원</button>
+    <button class="btn-mgmt btn-reset" onclick="resetAllData()">🗑 초기화</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importBackup(event)">
+  </div>
+
 </main>
 
 <footer class="footer">
@@ -453,6 +474,8 @@ const STEP_LABELS = {pending:'대기',running:'실행 중',complete:'완료',err
 // 초기화
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  loadInputState();
+  initInputPersistence();
   checkHealth();
   loadHistory();
   updateCost();
@@ -967,6 +990,122 @@ function clearLog() { document.getElementById('log-panel').innerHTML = ''; }
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// localStorage 입력 상태 저장/복원
+// ═══════════════════════════════════════════════════════════════
+const MCN_STORAGE_KEY = 'mcn_inputs';
+
+function saveInputState() {
+  try {
+    const state = {
+      coupangUrl: document.getElementById('inp-coupang-url').value,
+      affiliateLink: document.getElementById('inp-affiliate').value,
+      bannerTag: document.getElementById('inp-banner').value,
+      productName: document.getElementById('inp-product-name').value,
+      socialUrls: document.getElementById('inp-social-urls').value,
+      aiProvider: document.getElementById('sel-ai').value,
+      chkReview: document.getElementById('chk-review').checked,
+      upYt: document.getElementById('up-yt').checked,
+      upIg: document.getElementById('up-ig').checked,
+      upNv: document.getElementById('up-nv').checked,
+      upDrive: document.getElementById('up-drive').checked,
+    };
+    localStorage.setItem(MCN_STORAGE_KEY, JSON.stringify(state));
+  } catch(e) { console.warn('saveInputState 실패:', e); }
+}
+
+function loadInputState() {
+  try {
+    const raw = localStorage.getItem(MCN_STORAGE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.coupangUrl) document.getElementById('inp-coupang-url').value = s.coupangUrl;
+    if (s.affiliateLink) document.getElementById('inp-affiliate').value = s.affiliateLink;
+    if (s.bannerTag) document.getElementById('inp-banner').value = s.bannerTag;
+    if (s.productName) document.getElementById('inp-product-name').value = s.productName;
+    if (s.socialUrls) document.getElementById('inp-social-urls').value = s.socialUrls;
+    if (s.aiProvider) document.getElementById('sel-ai').value = s.aiProvider;
+    if (typeof s.chkReview === 'boolean') document.getElementById('chk-review').checked = s.chkReview;
+    if (typeof s.upYt === 'boolean') document.getElementById('up-yt').checked = s.upYt;
+    if (typeof s.upIg === 'boolean') document.getElementById('up-ig').checked = s.upIg;
+    if (typeof s.upNv === 'boolean') document.getElementById('up-nv').checked = s.upNv;
+    if (typeof s.upDrive === 'boolean') document.getElementById('up-drive').checked = s.upDrive;
+  } catch(e) { console.warn('loadInputState 실패:', e); }
+}
+
+function initInputPersistence() {
+  // 텍스트 입력 필드 — input 이벤트로 실시간 저장
+  ['inp-coupang-url','inp-affiliate','inp-banner','inp-product-name','inp-social-urls'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveInputState);
+  });
+  // select
+  const selAi = document.getElementById('sel-ai');
+  if (selAi) selAi.addEventListener('change', saveInputState);
+  // 체크박스 토글
+  ['chk-review','up-yt','up-ig','up-nv','up-drive'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveInputState);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 백업/복원/초기화
+// ═══════════════════════════════════════════════════════════════
+function exportBackup() {
+  const data = {
+    _app: 'YJ Partners MCN',
+    _version: 'V3',
+    _date: new Date().toISOString(),
+    inputs: JSON.parse(localStorage.getItem(MCN_STORAGE_KEY) || '{}'),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'MCN_Backup_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  addLog('백업 파일 다운로드 완료', 'ok');
+}
+
+function importBackup(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data._app || data._app !== 'YJ Partners MCN') {
+        alert('올바른 MCN 백업 파일이 아닙니다.');
+        return;
+      }
+      if (data.inputs) {
+        localStorage.setItem(MCN_STORAGE_KEY, JSON.stringify(data.inputs));
+        addLog('백업 복원 완료 (' + (data._date || '날짜 불명') + ')', 'ok');
+        alert('복원 완료! 페이지를 새로고침합니다.');
+        location.reload();
+      } else {
+        alert('백업 데이터가 비어 있습니다.');
+      }
+    } catch(err) {
+      alert('올바른 백업 파일이 아닙니다.');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+function resetAllData() {
+  const pw = prompt('초기화를 위해 비밀번호를 입력하세요:');
+  if (pw === null) return;
+  if (pw !== '0729') { alert('비밀번호가 틀렸습니다.'); return; }
+  if (!confirm('모든 저장된 입력 데이터를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  localStorage.removeItem(MCN_STORAGE_KEY);
+  addLog('전체 데이터 초기화 완료', 'warn');
+  alert('초기화 완료! 페이지를 새로고침합니다.');
+  location.reload();
 }
 </script>
 </body>
