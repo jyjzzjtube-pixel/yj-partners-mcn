@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-YJ MCN 자동화 대시보드 — Flask 백엔드
-=====================================
+YJ MCN 자동화 대시보드 V3.1 — Flask 백엔드
+============================================
 기존 affiliate_system 모듈을 REST API로 래핑.
 SSE로 파이프라인 진행상황 실시간 스트리밍.
+
+V3.1: 보안 강화 (CORS 제한, 메모리 누수 방지, 입력 검증)
 
 실행: python yj-partners-mcn/mcn_server.py
 """
@@ -40,7 +42,12 @@ ai_service = AIService()
 
 # ── Flask 앱 설정 ──
 app = Flask(__name__, static_folder=str(Path(__file__).parent))
-CORS(app)  # 로컬 전용 — 모든 origin 허용
+CORS(app, origins=[
+    "https://jyjzzjtube-pixel.github.io",
+    "http://localhost:5001",
+    "http://127.0.0.1:5001",
+    "http://localhost:*",
+])  # V3.1: 허용 origin 제한
 
 # ── Job 저장소 & 캠페인 히스토리 ──
 jobs = {}  # job_id -> {status, step, progress, results, events, error}
@@ -318,12 +325,34 @@ def _cleanup_old_jobs(jobs_dict, max_age_seconds=3600):
     """1시간 이상 된 완료/에러 잡을 제거하여 메모리 누수 방지."""
     now = datetime.now()
     to_remove = []
+    active_states = ("running", "pending", "analyzing", "awaiting_confirm", "executing")
     for jid, job in jobs_dict.items():
         created = datetime.fromisoformat(job.get("created_at", now.isoformat()))
-        if (now - created).total_seconds() > max_age_seconds and job.get("status", job.get("state")) not in ("running", "pending"):
+        status = job.get("status", job.get("state", ""))
+        if (now - created).total_seconds() > max_age_seconds and status not in active_states:
             to_remove.append(jid)
     for jid in to_remove:
+        # V3 파이프라인 객체 참조 해제 (메모리 확보)
+        job = jobs_dict[jid]
+        if "pipeline" in job:
+            del job["pipeline"]
         del jobs_dict[jid]
+
+
+def _start_periodic_cleanup():
+    """백그라운드 스레드: 모든 잡 저장소를 주기적으로 정리 (서버 시작 시 호출)."""
+    def _loop():
+        while True:
+            time.sleep(600)  # 10분마다 실행
+            try:
+                _cleanup_old_jobs(jobs)
+                if 'v2_jobs' in globals():
+                    _cleanup_old_jobs(v2_jobs)
+                if 'v3_jobs' in globals():
+                    _cleanup_old_jobs(v3_jobs)
+            except Exception:
+                pass
+    threading.Thread(target=_loop, daemon=True).start()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2656,8 +2685,9 @@ def v3_blog_preview(job_id):
 if __name__ == '__main__':
     import io, sys
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    _start_periodic_cleanup()  # 메모리 누수 방지 백그라운드 정리 시작
     print("=" * 50)
-    print("YJ MCN Automation Dashboard Server")
+    print("YJ MCN Automation Dashboard Server V3.1")
     print(f"  URL: http://localhost:5001")
     print(f"  Gemini: {'OK' if GEMINI_API_KEY else 'NO'}")
     print(f"  Claude: {'OK' if ANTHROPIC_API_KEY else 'NO'}")

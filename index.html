@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YJ MCN — Coupang Profit Max V3</title>
+<title>YJ MCN — Coupang Profit Max V3.1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -214,11 +214,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="logo-icon">YJ</div>
       <div>
         <h1>YJ MCN Coupang Profit Max</h1>
-        <p>V3 Ultimate &mdash; 8-Step Pipeline</p>
+        <p>V3.1 Ultimate &mdash; 8-Step Pipeline</p>
       </div>
     </div>
     <div class="header-right">
-      <span class="badge badge-v3">V3</span>
+      <span class="badge badge-v3">V3.1</span>
       <span class="badge badge-cost" id="cost-badge">API ₩0</span>
       <span class="badge badge-online" id="status-badge">CONNECTING...</span>
     </div>
@@ -229,7 +229,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
   <!-- ═══ 쿠팡 파트너스 설정 ═══ -->
   <div class="input-panel">
-    <div class="input-panel-header">🛒 쿠팡 파트너스 V3 &mdash; 수익 극대화 파이프라인</div>
+    <div class="input-panel-header">🛒 쿠팡 파트너스 V3.1 &mdash; 수익 극대화 파이프라인</div>
 
     <div class="field-row">
       <span class="field-label" style="color:var(--accent)">📦 쿠팡 상품 URL</span>
@@ -303,7 +303,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
   <!-- ═══ 8단계 파이프라인 (카테고리별 컬러) ═══ -->
   <div class="section">
-    <div class="section-title"><span class="icon">📋</span> V3 파이프라인 — 8단계</div>
+    <div class="section-title"><span class="icon">📋</span> V3.1 파이프라인 — 8단계</div>
     <div class="pipe-table-wrap">
     <table class="pipe-table" id="pipe-table">
       <thead>
@@ -442,17 +442,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </main>
 
 <footer class="footer">
-  &copy; 2026 YJ Partners MCN &mdash; V3 Ultimate Pipeline<br>
+  &copy; 2026 YJ Partners MCN &mdash; V3.1 Ultimate Pipeline<br>
   NanoBanana Pro + Imagen 4.0 + VEO 3.1 + Gemini AI + Claude AI + FFmpeg GPU + Edge-TTS + Whisper | Flask :5001
 </footer>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// GitHub Pages 접속 시 → localhost:5001 자동 리다이렉트
+// GitHub Pages 접속 시 → localhost:5001 리다이렉트 (사용자 선택)
 // ═══════════════════════════════════════════════════════════════
-if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-  window.location.replace('http://localhost:5001');
-}
+(function() {
+  if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    // localStorage에 사용자 선택 기억
+    const pref = localStorage.getItem('mcn_redirect_pref');
+    if (pref === 'stay') return; // 이전에 "여기서 보기" 선택
+    if (pref === 'redirect') { window.location.replace('http://localhost:5001'); return; }
+    // 최초 방문: 사용자에게 선택 요청
+    const choice = confirm(
+      'YJ MCN 대시보드는 로컬 서버(localhost:5001)가 필요합니다.\n\n' +
+      '[확인] → localhost:5001로 이동\n' +
+      '[취소] → 이 페이지에서 보기 (서버 기능 제한)'
+    );
+    if (choice) {
+      localStorage.setItem('mcn_redirect_pref', 'redirect');
+      window.location.replace('http://localhost:5001');
+    } else {
+      localStorage.setItem('mcn_redirect_pref', 'stay');
+    }
+  }
+})();
 
 // ═══════════════════════════════════════════════════════════════
 // V3 상태 관리
@@ -514,7 +531,7 @@ function renderServices(svcs) {
   const grid = document.getElementById('status-grid');
   grid.innerHTML = Object.entries(svcs).map(([k,ok]) =>
     `<div class="status-item"><div class="status-dot ${ok?'on':'off'}"></div>
-     <div><div class="status-name">${names[k]?.[0]||k}</div><div class="status-detail">${names[k]?.[1]||''}</div></div></div>`
+     <div><div class="status-name">${esc(names[k]?.[0]||k)}</div><div class="status-detail">${esc(names[k]?.[1]||'')}</div></div></div>`
   ).join('');
 }
 
@@ -842,8 +859,8 @@ function renderMediaTab() {
     body.innerHTML = '<div class="media-grid">' + items.map(img => {
       const src = typeof img === 'string' ? img : (img.path || img.url || img.thumb || '');
       const fileUrl = src.startsWith('http') ? src : `/api/file/${encodeURIComponent(src)}`;
-      const title = typeof img === 'object' ? (img.title || img.source || '') : '';
-      return `<img class="media-thumb" src="${esc(fileUrl)}" title="${esc(title)}" loading="lazy" onerror="this.style.display='none'" />`;
+      const title = typeof img === 'object' ? esc(img.title || img.source || '') : '';
+      return `<img class="media-thumb" src="${esc(fileUrl)}" title="${title}" loading="lazy" onerror="this.style.display='none'" />`;
     }).join('') + '</div>';
   }
 }
@@ -938,13 +955,14 @@ async function loadHistory() {
       const icon = c.status==='complete'?'✅':c.status==='error'?'❌':c.status==='running'?'🔄':'⏸';
       const cls = c.status==='complete'?'ok':c.status==='error'?'err':'';
       const date = c.created_at ? new Date(c.created_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      const safeId = esc((c.id||'').slice(0,12));
       return `<tr>
-        <td style="font-family:monospace;font-size:10px">${(c.id||'').slice(0,8)}</td>
+        <td style="font-family:monospace;font-size:10px">${esc((c.id||'').slice(0,8))}</td>
         <td><b>${esc((c.topic||'').slice(0,35))}</b></td>
-        <td><span class="log-line ${cls}" style="margin:0">${icon} ${c.status}</span></td>
+        <td><span class="log-line ${cls}" style="margin:0">${icon} ${esc(c.status||'')}</span></td>
         <td style="font-size:10px">$${(c.cost_usd||0).toFixed(4)}</td>
-        <td style="font-size:10px">${date}</td>
-        <td>${c.status==='complete'?`<button class="btn btn-sm btn-outline" onclick="reuse('${c.id}')">재사용</button>`:''}</td>
+        <td style="font-size:10px">${esc(date)}</td>
+        <td>${c.status==='complete'?`<button class="btn btn-sm btn-outline" onclick="reuse('${safeId}')">재사용</button>`:''}</td>
       </tr>`;
     }).join('');
   } catch(e) {
@@ -1057,7 +1075,7 @@ function initInputPersistence() {
 function exportBackup() {
   const data = {
     _app: 'YJ Partners MCN',
-    _version: 'V3',
+    _version: 'V3.1',
     _date: new Date().toISOString(),
     inputs: JSON.parse(localStorage.getItem(MCN_STORAGE_KEY) || '{}'),
   };
@@ -1097,10 +1115,17 @@ function importBackup(ev) {
   ev.target.value = '';
 }
 
-function resetAllData() {
+async function checkPW(input) {
+  const data = new TextEncoder().encode(input);
+  const hashBuf = await crypto.subtle.digest('SHA-256', data);
+  const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return hash === '878f96264ece1c85973dfa3b39dec9a7dc4cf6f08168ff5a183389a36b1bb9d0';
+}
+
+async function resetAllData() {
   const pw = prompt('초기화를 위해 비밀번호를 입력하세요:');
   if (pw === null) return;
-  if (pw !== '0729') { alert('비밀번호가 틀렸습니다.'); return; }
+  if (!(await checkPW(pw))) { alert('비밀번호가 틀렸습니다.'); return; }
   if (!confirm('모든 저장된 입력 데이터를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
   localStorage.removeItem(MCN_STORAGE_KEY);
   addLog('전체 데이터 초기화 완료', 'warn');
