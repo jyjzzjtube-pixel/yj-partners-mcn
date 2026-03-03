@@ -447,27 +447,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </footer>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// GitHub Pages 접속 시 → localhost:5001 리다이렉트 (사용자 선택)
-// ═══════════════════════════════════════════════════════════════
+// GitHub Pages에서 직접 작동 (리다이렉트 없음)
+// 로컬 서버(localhost:5001)가 있으면 API 기능 활성화, 없으면 정적 모드
 (function() {
+  localStorage.removeItem('mcn_redirect_pref'); // 이전 리다이렉트 설정 제거
   if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-    // localStorage에 사용자 선택 기억
-    const pref = localStorage.getItem('mcn_redirect_pref');
-    if (pref === 'stay') return; // 이전에 "여기서 보기" 선택
-    if (pref === 'redirect') { window.location.replace('http://localhost:5001'); return; }
-    // 최초 방문: 사용자에게 선택 요청
-    const choice = confirm(
-      'YJ MCN 대시보드는 로컬 서버(localhost:5001)가 필요합니다.\n\n' +
-      '[확인] → localhost:5001로 이동\n' +
-      '[취소] → 이 페이지에서 보기 (서버 기능 제한)'
-    );
-    if (choice) {
-      localStorage.setItem('mcn_redirect_pref', 'redirect');
-      window.location.replace('http://localhost:5001');
-    } else {
-      localStorage.setItem('mcn_redirect_pref', 'stay');
-    }
+    console.log('[YJ MCN] GitHub Pages 모드 — 정적 대시보드 활성');
   }
 })();
 
